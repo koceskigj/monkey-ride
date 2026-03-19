@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:monkey_ride/providers/map_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'app/app.dart';
@@ -19,6 +20,7 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
+        ChangeNotifierProvider(create: (_) => MapProvider()),
       ],
       child: const MonkeyRideApp(),
     ),
