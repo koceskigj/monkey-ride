@@ -1,93 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
-import '../../providers/map_provider.dart';
+import '../../providers/location_provider.dart';
+import 'widgets/location_permission_banner.dart';
+import 'widgets/map_recenter_button.dart';
 
-class MapScreen extends StatelessWidget {
+class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final mapProvider = context.watch<MapProvider>();
-    final selectedRoute = mapProvider.selectedRoute;
-    final selectedStops = mapProvider.selectedRouteStops;
+  State<MapScreen> createState() => _MapScreenState();
+}
 
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DropdownButton<String>(
-                value: mapProvider.selectedLineId,
-                isExpanded: true,
-                items: mapProvider.busLines
-                    .map(
-                      (line) => DropdownMenuItem(
-                    value: line.id,
-                    child: Text(line.name),
-                  ),
-                )
-                    .toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    mapProvider.selectLine(value);
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-              DropdownButton<String>(
-                value: mapProvider.selectedDirection,
-                isExpanded: true,
-                items: const [
-                  DropdownMenuItem(
-                    value: 'west_to_east',
-                    child: Text('West to East'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'east_to_west',
-                    child: Text('East to West'),
-                  ),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    mapProvider.selectDirection(value);
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-              if (selectedRoute != null)
-                Text(
-                  '${selectedRoute.startLabel} → ${selectedRoute.endLabel}',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-            ],
-          ),
+class _MapScreenState extends State<MapScreen> {
+  GoogleMapController? _mapController;
+
+  static const CameraPosition _initialCameraPosition = CameraPosition(
+    target: LatLng(41.3451, 21.5550),
+    zoom: 13.8,
+  );
+
+  Future<void> _recenterToUser(LocationProvider locationProvider) async {
+    if (!locationProvider.isGranted) {
+      await locationProvider.requestPermission();
+      return;
+    }
+
+    if (locationProvider.currentPosition == null) {
+      await locationProvider.getCurrentLocation();
+    }
+
+    final position = locationProvider.currentPosition;
+    if (position == null || _mapController == null) return;
+
+    await _mapController!.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: LatLng(position.latitude, position.longitude),
+          zoom: 15.5,
         ),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Text(
-                'Route Stops',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 12),
-              ...selectedStops.map(
-                    (stop) => Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.location_on_outlined),
-                    title: Text(stop.name),
-                    subtitle: Text(
-                      '${stop.latitude}, ${stop.longitude}',
-                    ),
-                  ),
-                ),
-              ),
-            ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final locationProvider = context.watch<LocationProvider>();
+
+    return Stack(
+      children: [
+        GoogleMap(
+          initialCameraPosition: _initialCameraPosition,
+          myLocationEnabled: locationProvider.isGranted,
+          myLocationButtonEnabled: false,
+          zoomControlsEnabled: false,
+          compassEnabled: true,
+          mapToolbarEnabled: false,
+          onMapCreated: (controller) {
+            _mapController = controller;
+          },
+        ),
+
+        LocationPermissionBanner(
+          permissionState: locationProvider.permissionState,
+          onRequestPermission: locationProvider.requestPermission,
+          onOpenSettings: locationProvider.openAppSettingsPage,
+          onOpenLocationSettings: locationProvider.openLocationSettingsPage,
+        ),
+
+        Positioned(
+          right: 16,
+          top: 90,
+          child: MapRecenterButton(
+            onPressed: () => _recenterToUser(locationProvider),
           ),
         ),
       ],
