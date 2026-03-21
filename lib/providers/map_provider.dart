@@ -10,52 +10,47 @@ class MapProvider extends ChangeNotifier {
   final List<LineRouteModel> _lineRoutes = SampleData.lineRoutes;
   final List<LocationModel> _locations = SampleData.locations;
 
-  String _selectedLineId = 'line_1';
+  final Set<String> _selectedLineIds = {
+    'line_1',
+    'line_2',
+    'line_3',
+    'line_4',
+    'line_5',
+  };
+
   String _selectedDirection = 'west_to_east';
 
   List<BusLineModel> get busLines => _busLines;
   List<LocationModel> get locations => _locations;
-  String get selectedLineId => _selectedLineId;
+  Set<String> get selectedLineIds => _selectedLineIds;
   String get selectedDirection => _selectedDirection;
 
-  LineRouteModel? get selectedRoute {
-    try {
-      return _lineRoutes.firstWhere(
-            (route) =>
-        route.lineId == _selectedLineId &&
-            route.direction == _selectedDirection &&
-            route.isActive,
-      );
-    } catch (_) {
-      return null;
-    }
+  List<LineRouteModel> get selectedRoutes {
+    return _lineRoutes.where((route) {
+      return _selectedLineIds.contains(route.lineId) &&
+          route.direction == _selectedDirection &&
+          route.isActive;
+    }).toList();
   }
 
   List<LocationModel> get selectedRouteStops {
-    final route = selectedRoute;
-    if (route == null) return [];
+    final allStopIds = selectedRoutes
+        .expand((route) => route.stopIdsOrdered)
+        .toSet();
 
-    return route.stopIdsOrdered
-        .map(
-          (stopId) => _locations.firstWhere(
-            (location) => location.id == stopId,
-        orElse: () => const LocationModel(
-          id: '',
-          name: '',
-          type: '',
-          latitude: 0,
-          longitude: 0,
-          isActive: false,
-          searchKeywords: [],
-        ),
-      ),
-    )
-        .where((location) => location.id.isNotEmpty)
-        .toList();
+    return _locations.where((location) {
+      return allStopIds.contains(location.id);
+    }).toList();
   }
 
-  void selectLine(String lineId) {
-    _selectedLineId = lineId;
+  void toggleLineSelection(String lineId) {
+    if (_selectedLineIds.contains(lineId)) {
+      if (_selectedLineIds.length > 1) {
+        _selectedLineIds.remove(lineId);
+      }
+    } else {
+      _selectedLineIds.add(lineId);
+    }
     notifyListeners();
   }
 
