@@ -68,6 +68,9 @@ flutter:
 
   assets:
     - assets/map_styles/dark_map_style.json
+    - assets/icons/monkey_stop_light.png
+    - assets/icons/monkey_stop_dark.png
+    - assets/icons/monkey_stop.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -43,6 +43,21 @@ class MapProvider extends ChangeNotifier {
     }).toList();
   }
 
+  List<int> getLineNumbersForStop(String stopId) {
+    final lineIds = _lineRoutes
+        .where((route) => route.stopIdsOrdered.contains(stopId) && route.isActive)
+        .map((route) => route.lineId)
+        .toSet();
+
+    final numbers = _busLines
+        .where((line) => lineIds.contains(line.id))
+        .map((line) => line.number)
+        .toList();
+
+    numbers.sort();
+    return numbers;
+  }
+
   void toggleLineSelection(String lineId) {
     if (_selectedLineIds.contains(lineId)) {
       if (_selectedLineIds.length > 1) {

@@ -51,6 +51,7 @@ class SampleData {
       description: 'West to East stop',
       isActive: true,
       searchKeywords: ['tutunski', 'kombinat'],
+      lineIds: ['line_1', 'line_2', 'line_4'],
     ),
     const LocationModel(
       id: 'stop_2_we',
@@ -61,6 +62,7 @@ class SampleData {
       description: 'West to East stop',
       isActive: true,
       searchKeywords: ['nova', 'avtobuska', 'autobuska'],
+      lineIds: ['line_1', 'line_2', 'line_3'],
     ),
     const LocationModel(
       id: 'stop_3_we',
@@ -68,9 +70,20 @@ class SampleData {
       type: 'bus_stop',
       latitude: 41.3442,
       longitude: 21.5628,
-      description: 'West to East stop',
+      description: 'Main center stop',
       isActive: true,
       searchKeywords: ['centar', 'center'],
+      lineIds: ['line_1', 'line_3', 'line_4', 'line_5'],
+    ),
+    const LocationModel(
+      id: 'ticket_1',
+      name: 'Ticket Office Center',
+      type: 'ticket_office',
+      latitude: 41.3438,
+      longitude: 21.5612,
+      description: 'Get your Prilep card here.',
+      isActive: true,
+      searchKeywords: ['ticket', 'office', 'card'],
     ),
     const LocationModel(
       id: 'landmark_1',
@@ -78,9 +91,19 @@ class SampleData {
       type: 'landmark',
       latitude: 41.3457,
       longitude: 21.5548,
-      description: 'Famous city landmark',
+      description: 'One of the most recognizable landmarks in Prilep.',
       isActive: true,
       searchKeywords: ['clock', 'tower', 'saat', 'kula'],
+    ),
+    const LocationModel(
+      id: 'cafe_1',
+      name: 'Monkey Brew Cafe',
+      type: 'cafe',
+      latitude: 41.3448,
+      longitude: 21.5645,
+      description: 'A cozy place for coffee, drinks, and a short rest.',
+      isActive: true,
+      searchKeywords: ['cafe', 'coffee', 'brew'],
     ),
   ];
 
@@ -92,7 +115,10 @@ class SampleData {
       stopIdsOrdered: ['stop_1_we', 'stop_2_we', 'stop_3_we'],
       polylinePoints: [
         {'latitude': 41.3450, 'longitude': 21.5550},
+        {'latitude': 41.3458, 'longitude': 21.5564},
+        {'latitude': 41.3462, 'longitude': 21.5581},
         {'latitude': 41.3465, 'longitude': 21.5600},
+        {'latitude': 41.3453, 'longitude': 21.5615},
         {'latitude': 41.3442, 'longitude': 21.5628},
       ],
       startLabel: 'West Terminal',
@@ -106,6 +132,8 @@ class SampleData {
       stopIdsOrdered: ['stop_1_we', 'stop_2_we'],
       polylinePoints: [
         {'latitude': 41.3450, 'longitude': 21.5550},
+        {'latitude': 41.3456, 'longitude': 21.5562},
+        {'latitude': 41.3461, 'longitude': 21.5583},
         {'latitude': 41.3465, 'longitude': 21.5600},
       ],
       startLabel: 'West Terminal',
@@ -119,6 +147,8 @@ class SampleData {
       stopIdsOrdered: ['stop_2_we', 'stop_3_we'],
       polylinePoints: [
         {'latitude': 41.3465, 'longitude': 21.5600},
+        {'latitude': 41.3458, 'longitude': 21.5611},
+        {'latitude': 41.3449, 'longitude': 21.5620},
         {'latitude': 41.3442, 'longitude': 21.5628},
       ],
       startLabel: 'Bus Station',
@@ -132,6 +162,8 @@ class SampleData {
       stopIdsOrdered: ['stop_1_we', 'stop_3_we'],
       polylinePoints: [
         {'latitude': 41.3450, 'longitude': 21.5550},
+        {'latitude': 41.3447, 'longitude': 21.5576},
+        {'latitude': 41.3445, 'longitude': 21.5602},
         {'latitude': 41.3442, 'longitude': 21.5628},
       ],
       startLabel: 'West Side',
@@ -157,7 +189,10 @@ class SampleData {
       stopIdsOrdered: ['stop_3_we', 'stop_2_we', 'stop_1_we'],
       polylinePoints: [
         {'latitude': 41.3442, 'longitude': 21.5628},
+        {'latitude': 41.3453, 'longitude': 21.5615},
         {'latitude': 41.3465, 'longitude': 21.5600},
+        {'latitude': 41.3462, 'longitude': 21.5581},
+        {'latitude': 41.3458, 'longitude': 21.5564},
         {'latitude': 41.3450, 'longitude': 21.5550},
       ],
       startLabel: 'East Terminal',
@@ -171,6 +206,8 @@ class SampleData {
       stopIdsOrdered: ['stop_2_we', 'stop_1_we'],
       polylinePoints: [
         {'latitude': 41.3465, 'longitude': 21.5600},
+        {'latitude': 41.3461, 'longitude': 21.5583},
+        {'latitude': 41.3456, 'longitude': 21.5562},
         {'latitude': 41.3450, 'longitude': 21.5550},
       ],
       startLabel: 'North-East',
@@ -184,6 +221,8 @@ class SampleData {
       stopIdsOrdered: ['stop_3_we', 'stop_2_we'],
       polylinePoints: [
         {'latitude': 41.3442, 'longitude': 21.5628},
+        {'latitude': 41.3449, 'longitude': 21.5620},
+        {'latitude': 41.3458, 'longitude': 21.5611},
         {'latitude': 41.3465, 'longitude': 21.5600},
       ],
       startLabel: 'Center',
@@ -197,6 +236,8 @@ class SampleData {
       stopIdsOrdered: ['stop_3_we', 'stop_1_we'],
       polylinePoints: [
         {'latitude': 41.3442, 'longitude': 21.5628},
+        {'latitude': 41.3445, 'longitude': 21.5602},
+        {'latitude': 41.3447, 'longitude': 21.5576},
         {'latitude': 41.3450, 'longitude': 21.5550},
       ],
       startLabel: 'East Side',

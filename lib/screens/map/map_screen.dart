@@ -6,6 +6,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme/theme_provider.dart';
+import '../../core/utils/marker_icon_helper.dart';
+import '../../models/location_model.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/map_provider.dart';
 import 'widgets/location_permission_banner.dart';
@@ -13,6 +15,7 @@ import 'widgets/map_filters_button.dart';
 import 'widgets/map_filters_sheet.dart';
 import 'widgets/map_legend_button.dart';
 import 'widgets/map_recenter_button.dart';
+import 'widgets/place_details_sheet.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -25,6 +28,14 @@ class _MapScreenState extends State<MapScreen> {
   GoogleMapController? _mapController;
   String? _darkMapStyle;
 
+  BitmapDescriptor? _busStopMarkerLight;
+  BitmapDescriptor? _busStopMarkerDark;
+  BitmapDescriptor? _ticketOfficeMarker;
+  BitmapDescriptor? _attractionMarker;
+  BitmapDescriptor? _cafeMarker;
+
+  bool _didLoadAssets = false;
+
   static const CameraPosition _initialCameraPosition = CameraPosition(
     target: LatLng(41.3451, 21.5550),
     zoom: 13.8,
@@ -36,12 +47,74 @@ class _MapScreenState extends State<MapScreen> {
     _loadDarkMapStyle();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (!_didLoadAssets) {
+      _didLoadAssets = true;
+      _loadMarkerIcons();
+    }
+  }
+
   Future<void> _loadDarkMapStyle() async {
     final style = await rootBundle.loadString(
       'assets/map_styles/dark_map_style.json',
     );
+
+    if (!mounted) return;
+
     setState(() {
       _darkMapStyle = style;
+    });
+  }
+
+  Future<void> _loadMarkerIcons() async {
+    final imageConfiguration = createLocalImageConfiguration(context);
+
+    final busStopLight = await BitmapDescriptor.asset(
+      imageConfiguration,
+      'assets/icons/monkey_stop.png',
+      width: 28,
+      height: 28,
+    );
+
+    final busStopDark = await BitmapDescriptor.asset(
+      imageConfiguration,
+      'assets/icons/monkey_stop.png',
+      width: 28,
+      height: 28,
+    );
+
+    final ticketOffice = await MarkerIconHelper.fromIcon(
+      icon: Icons.confirmation_num,
+      color: Colors.blue,
+      backgroundColor: Colors.white,
+      size: 52,
+    );
+
+    final attraction = await MarkerIconHelper.fromIcon(
+      icon: Icons.account_balance,
+      color: Colors.purple,
+      backgroundColor: Colors.white,
+      size: 52,
+    );
+
+    final cafe = await MarkerIconHelper.fromIcon(
+      icon: Icons.local_cafe,
+      color: Colors.orange,
+      backgroundColor: Colors.white,
+      size: 52,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _busStopMarkerLight = busStopLight;
+      _busStopMarkerDark = busStopDark;
+      _ticketOfficeMarker = ticketOffice;
+      _attractionMarker = attraction;
+      _cafeMarker = cafe;
     });
   }
 
@@ -78,23 +151,40 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  void _showLegendDialog() {
+  void _showLegendDialog(bool isDarkMode) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Map Legend'),
-          content: const Column(
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _LegendRow(icon: Icons.pets, label: 'Bus stop'),
-              SizedBox(height: 12),
-              _LegendRow(icon: Icons.confirmation_num, label: 'Ticket office'),
-              SizedBox(height: 12),
-              _LegendRow(icon: Icons.account_balance, label: 'Attraction'),
-              SizedBox(height: 12),
-              _LegendRow(icon: Icons.local_cafe, label: 'Cafe'),
+              _LegendImageRow(
+                imagePath: isDarkMode
+                    ? 'assets/icons/monkey_stop.png'
+                    : 'assets/icons/monkey_stop.png',
+                label: 'Bus stop',
+              ),
+              const SizedBox(height: 12),
+              const _LegendIconRow(
+                icon: Icons.confirmation_num,
+                label: 'Ticket office',
+                color: Colors.blue,
+              ),
+              const SizedBox(height: 12),
+              const _LegendIconRow(
+                icon: Icons.account_balance,
+                label: 'Attraction',
+                color: Colors.purple,
+              ),
+              const SizedBox(height: 12),
+              const _LegendIconRow(
+                icon: Icons.local_cafe,
+                label: 'Cafe',
+                color: Colors.orange,
+              ),
             ],
           ),
         );
@@ -108,6 +198,15 @@ class _MapScreenState extends State<MapScreen> {
       showDragHandle: false,
       isScrollControlled: true,
       builder: (_) => const MapFiltersSheet(),
+    );
+  }
+
+  void _showPlaceDetails(LocationModel location) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: false,
+      builder: (_) => PlaceDetailsSheet(location: location),
     );
   }
 
@@ -138,15 +237,52 @@ class _MapScreenState extends State<MapScreen> {
     }).toSet();
   }
 
-  Set<Marker> _buildStopMarkers(MapProvider mapProvider) {
-    return mapProvider.selectedRouteStops.map((stop) {
+  BitmapDescriptor _markerIconForType(String type, bool isDarkMode) {
+    switch (type) {
+      case 'bus_stop':
+        return isDarkMode
+            ? (_busStopMarkerDark ?? BitmapDescriptor.defaultMarker)
+            : (_busStopMarkerLight ?? BitmapDescriptor.defaultMarker);
+      case 'ticket_office':
+        return _ticketOfficeMarker ?? BitmapDescriptor.defaultMarker;
+      case 'landmark':
+        return _attractionMarker ?? BitmapDescriptor.defaultMarker;
+      case 'cafe':
+        return _cafeMarker ?? BitmapDescriptor.defaultMarker;
+      default:
+        return BitmapDescriptor.defaultMarker;
+    }
+  }
+
+  Set<Marker> _buildMarkers(MapProvider mapProvider, bool isDarkMode) {
+    final visibleBusStops = mapProvider.selectedRouteStops;
+    final otherLocations = mapProvider.locations
+        .where((location) => location.type != 'bus_stop')
+        .toList();
+
+    final allVisibleLocations = [
+      ...visibleBusStops,
+      ...otherLocations,
+    ];
+
+    return allVisibleLocations.map((location) {
+      final lineNumbers = mapProvider.getLineNumbersForStop(location.id);
+
       return Marker(
-        markerId: MarkerId(stop.id),
-        position: LatLng(stop.latitude, stop.longitude),
+        markerId: MarkerId(location.id),
+        position: LatLng(location.latitude, location.longitude),
+        icon: _markerIconForType(location.type, isDarkMode),
         infoWindow: InfoWindow(
-          title: stop.name,
-          snippet: 'Monkey stop',
+          title: location.name,
+          snippet: location.type == 'bus_stop'
+              ? 'Lines: ${lineNumbers.join(', ')}'
+              : location.description,
         ),
+        onTap: () {
+          if (location.type == 'landmark' || location.type == 'cafe') {
+            _showPlaceDetails(location);
+          }
+        },
       );
     }).toSet();
   }
@@ -169,7 +305,7 @@ class _MapScreenState extends State<MapScreen> {
           compassEnabled: true,
           mapToolbarEnabled: false,
           polylines: _buildPolylines(mapProvider),
-          markers: _buildStopMarkers(mapProvider),
+          markers: _buildMarkers(mapProvider, isDarkMode),
           onMapCreated: (controller) async {
             _mapController = controller;
             await _applyMapStyle(isDarkMode);
@@ -191,7 +327,7 @@ class _MapScreenState extends State<MapScreen> {
               ),
               const SizedBox(height: 12),
               MapLegendButton(
-                onPressed: _showLegendDialog,
+                onPressed: () => _showLegendDialog(isDarkMode),
               ),
             ],
           ),
@@ -209,12 +345,35 @@ class _MapScreenState extends State<MapScreen> {
   }
 }
 
-class _LegendRow extends StatelessWidget {
+class _LegendIconRow extends StatelessWidget {
   final IconData icon;
   final String label;
+  final Color color;
 
-  const _LegendRow({
+  const _LegendIconRow({
     required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: color),
+        const SizedBox(width: 10),
+        Text(label),
+      ],
+    );
+  }
+}
+
+class _LegendImageRow extends StatelessWidget {
+  final String imagePath;
+  final String label;
+
+  const _LegendImageRow({
+    required this.imagePath,
     required this.label,
   });
 
@@ -222,7 +381,11 @@ class _LegendRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon),
+        Image.asset(
+          imagePath,
+          width: 22,
+          height: 22,
+        ),
         const SizedBox(width: 10),
         Text(label),
       ],
