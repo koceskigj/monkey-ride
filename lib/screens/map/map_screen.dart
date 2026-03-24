@@ -276,7 +276,7 @@ class _MapScreenState extends State<MapScreen> {
           title: location.name,
           snippet: location.type == 'bus_stop'
               ? 'Lines: ${lineNumbers.join(', ')}'
-              : location.description,
+              : mapProvider.getShortDescription(location.description),
         ),
         onTap: () {
           if (location.type == 'landmark' || location.type == 'cafe') {

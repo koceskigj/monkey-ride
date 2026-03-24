@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../core/constants/sample_data.dart';
+import '../core/services/map_firestore_service.dart';
 import '../models/bus_line_model.dart';
 import '../models/line_route_model.dart';
 import '../models/location_model.dart';
 
 class MapProvider extends ChangeNotifier {
-  final List<BusLineModel> _busLines = SampleData.busLines;
-  final List<LineRouteModel> _lineRoutes = SampleData.lineRoutes;
-  final List<LocationModel> _locations = SampleData.locations;
+  final MapFirestoreService _mapFirestoreService;
+
+  MapProvider({MapFirestoreService? mapFirestoreService})
+      : _mapFirestoreService = mapFirestoreService ?? MapFirestoreService();
+
+  List<BusLineModel> _busLines = SampleData.busLines;
+  List<LineRouteModel> _lineRoutes = SampleData.lineRoutes;
+  List<LocationModel> _locations = SampleData.locations;
 
   final Set<String> _selectedLineIds = {
     'line_1',
@@ -20,10 +26,18 @@ class MapProvider extends ChangeNotifier {
 
   String _selectedDirection = 'west_to_east';
 
+  bool _isLoading = false;
+  String? _errorMessage;
+  bool _isUsingSampleData = true;
+
   List<BusLineModel> get busLines => _busLines;
+  List<LineRouteModel> get lineRoutes => _lineRoutes;
   List<LocationModel> get locations => _locations;
   Set<String> get selectedLineIds => _selectedLineIds;
   String get selectedDirection => _selectedDirection;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  bool get isUsingSampleData => _isUsingSampleData;
 
   List<LineRouteModel> get selectedRoutes {
     return _lineRoutes.where((route) {
@@ -43,9 +57,84 @@ class MapProvider extends ChangeNotifier {
     }).toList();
   }
 
+  Future<void> loadMapData() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    print('========== MAP FIRESTORE LOAD START ==========');
+
+    try {
+      final busLines = await _mapFirestoreService.getBusLines();
+      final locations = await _mapFirestoreService.getLocations();
+      final lineRoutes = await _mapFirestoreService.getLineRoutes();
+
+      print('FIRESTORE busLines count: ${busLines.length}');
+      print('FIRESTORE locations count: ${locations.length}');
+      print('FIRESTORE lineRoutes count: ${lineRoutes.length}');
+
+      for (final line in busLines) {
+        print(
+          'LINE -> id: ${line.id}, number: ${line.number}, name: ${line.name}, active: ${line.isActive}',
+        );
+      }
+
+      for (final location in locations) {
+        print(
+          'LOCATION -> id: ${location.id}, name: ${location.name}, type: ${location.type}, lat: ${location.latitude}, lng: ${location.longitude}',
+        );
+      }
+
+      for (final route in lineRoutes) {
+        print(
+          'ROUTE -> id: ${route.id}, lineId: ${route.lineId}, direction: ${route.direction}, stops: ${route.stopIdsOrdered}, polyPoints: ${route.polylinePoints.length}',
+        );
+      }
+
+      if (busLines.isNotEmpty) {
+        _busLines = busLines;
+      }
+
+      if (locations.isNotEmpty) {
+        _locations = locations;
+      }
+
+      if (lineRoutes.isNotEmpty) {
+        _lineRoutes = lineRoutes;
+      }
+
+      _selectedLineIds
+        ..clear()
+        ..addAll(_busLines.map((line) => line.id));
+
+      _isUsingSampleData = false;
+
+      print('SELECTED LINE IDS AFTER LOAD: $_selectedLineIds');
+      print('SELECTED DIRECTION AFTER LOAD: $_selectedDirection');
+      print('SELECTED ROUTES COUNT: ${selectedRoutes.length}');
+      print('SELECTED ROUTE STOPS COUNT: ${selectedRouteStops.length}');
+      print('USING SAMPLE DATA: $_isUsingSampleData');
+      print('========== MAP FIRESTORE LOAD SUCCESS ==========');
+    } catch (e, stackTrace) {
+      print('========== MAP FIRESTORE LOAD ERROR ==========');
+      print('ERROR: $e');
+      print(stackTrace);
+      print('Falling back to sample data.');
+
+      _errorMessage = 'Failed to load live map data. Using sample data.';
+      _isUsingSampleData = true;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+      print('========== MAP FIRESTORE LOAD END ==========');
+    }
+  }
+
   List<int> getLineNumbersForStop(String stopId) {
     final lineIds = _lineRoutes
-        .where((route) => route.stopIdsOrdered.contains(stopId) && route.isActive)
+        .where(
+          (route) => route.stopIdsOrdered.contains(stopId) && route.isActive,
+    )
         .map((route) => route.lineId)
         .toSet();
 
@@ -56,6 +145,19 @@ class MapProvider extends ChangeNotifier {
 
     numbers.sort();
     return numbers;
+  }
+
+  String getShortDescription(String? description, {int maxLength = 30}) {
+    if (description == null || description.trim().isEmpty) {
+      return '';
+    }
+
+    final trimmed = description.trim();
+    if (trimmed.length <= maxLength) {
+      return trimmed;
+    }
+
+    return '${trimmed.substring(0, maxLength)}...';
   }
 
   void toggleLineSelection(String lineId) {

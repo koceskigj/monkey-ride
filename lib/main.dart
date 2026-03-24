@@ -21,7 +21,7 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
-        ChangeNotifierProvider(create: (_) => MapProvider()),
+        ChangeNotifierProvider(create: (_) => MapProvider()..loadMapData()),
         ChangeNotifierProvider(create: (_) => LocationProvider()..initialize()),
       ],
       child: const MonkeyRideApp(),
