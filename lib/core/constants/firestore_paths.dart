@@ -5,4 +5,5 @@ class FirestorePaths {
   static const String notifications = 'notifications';
   static const String arrivals = 'arrivals';
   static const String appConfig = 'app_config';
+  static const String infoSlides = 'info_slides';
 }
