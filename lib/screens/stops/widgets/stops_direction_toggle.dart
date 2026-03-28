@@ -21,7 +21,7 @@ class StopsDirectionToggle extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: FilledButton.icon(
+              child: FilledButton(
                 onPressed: () => onDirectionSelected('west_to_east'),
                 style: FilledButton.styleFrom(
                   backgroundColor: isWestToEast
@@ -37,8 +37,14 @@ class StopsDirectionToggle extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                icon: const Icon(Icons.arrow_forward),
-                label: const Text('West to East'),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Text('West to East'),
+                    SizedBox(width: 8),
+                    Icon(Icons.arrow_forward),
+                  ],
+                ),
               ),
             ),
             const SizedBox(width: 12),

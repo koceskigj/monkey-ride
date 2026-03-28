@@ -24,4 +24,10 @@ class StopsProvider extends ChangeNotifier {
     _searchQuery = '';
     notifyListeners();
   }
+
+  void reset() {
+    _searchQuery = '';
+    _selectedDirection = 'west_to_east';
+    notifyListeners();
+  }
 }

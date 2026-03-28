@@ -34,11 +34,6 @@ class _StopsScreenState extends State<StopsScreen> {
     super.dispose();
   }
 
-  Color _hexToColor(String hex) {
-    final cleanedHex = hex.replaceAll('#', '');
-    return Color(int.parse('FF$cleanedHex', radix: 16));
-  }
-
   List<LocationModel> _stopsForDirection(
       MapProvider mapProvider,
       String direction,
@@ -120,6 +115,16 @@ class _StopsScreenState extends State<StopsScreen> {
     final mapProvider = context.watch<MapProvider>();
     final locationProvider = context.watch<LocationProvider>();
     final stopsProvider = context.watch<StopsProvider>();
+
+    // Keep text field visually synced with provider state.
+    if (_searchController.text != stopsProvider.searchQuery) {
+      _searchController.value = TextEditingValue(
+        text: stopsProvider.searchQuery,
+        selection: TextSelection.collapsed(
+          offset: stopsProvider.searchQuery.length,
+        ),
+      );
+    }
 
     final direction = stopsProvider.selectedDirection;
     final allStopsForDirection = _stopsForDirection(mapProvider, direction);
