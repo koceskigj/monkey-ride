@@ -4,6 +4,7 @@ import 'package:monkey_ride/providers/info_provider.dart';
 import 'package:monkey_ride/providers/location_provider.dart';
 import 'package:monkey_ride/providers/map_provider.dart';
 import 'package:monkey_ride/providers/notifications_provider.dart';
+import 'package:monkey_ride/providers/stops_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'app/app.dart';
@@ -27,6 +28,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => LocationProvider()..initialize()),
         ChangeNotifierProvider(create: (_) => NotificationsProvider()..initialize()),
         ChangeNotifierProvider(create: (_) => InfoProvider()..loadSlides()),
+        ChangeNotifierProvider(create: (_) => StopsProvider()),
       ],
       child: const MonkeyRideApp(),
     ),
