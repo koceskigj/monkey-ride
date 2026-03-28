@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:monkey_ride/screens/stops/stop_arrivals_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/bus_line_model.dart';
@@ -7,7 +8,6 @@ import '../../models/location_model.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/map_provider.dart';
 import '../../providers/stops_provider.dart';
-import 'stop_details_screen.dart';
 import 'widgets/stop_row_card.dart';
 import 'widgets/stops_direction_toggle.dart';
 import 'widgets/stops_search_bar.dart';
@@ -218,9 +218,8 @@ class _StopsScreenState extends State<StopsScreen> {
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => StopDetailsScreen(
+                                  builder: (_) => StopArrivalsScreen(
                                     stop: stop,
-                                    lines: lines,
                                     direction: direction,
                                   ),
                                 ),
