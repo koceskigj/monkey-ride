@@ -27,16 +27,18 @@ class StopArrivalsScreen extends StatelessWidget {
           direction: direction,
         )
         ..startAutoRefresh(),
-      child: _StopArrivalsView(stop: stop),
+      child: _StopArrivalsView(stop: stop, direction: direction,),
     );
   }
 }
 
 class _StopArrivalsView extends StatelessWidget {
   final LocationModel stop;
+  final String direction;
 
   const _StopArrivalsView({
     required this.stop,
+    required this.direction,
   });
 
   @override
@@ -67,6 +69,36 @@ class _StopArrivalsView extends StatelessWidget {
             if (arrivalsProvider.isLoading) {
               return const Center(
                 child: CircularProgressIndicator(),
+              );
+            }
+
+            if (arrivalsProvider.errorMessage != null) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.cloud_off, size: 56),
+                      const SizedBox(height: 16),
+                      Text(
+                        arrivalsProvider.errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          arrivalsProvider.loadArrivals(
+                            stopId: stop.id,
+                            direction: direction,
+                          );
+                        },
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
               );
             }
 
