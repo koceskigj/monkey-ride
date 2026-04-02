@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../core/constants/sample_data.dart';
 import '../core/services/map_firestore_service.dart';
 import '../models/bus_line_model.dart';
 import '../models/line_route_model.dart';
@@ -12,23 +11,15 @@ class MapProvider extends ChangeNotifier {
   MapProvider({MapFirestoreService? mapFirestoreService})
       : _mapFirestoreService = mapFirestoreService ?? MapFirestoreService();
 
-  List<BusLineModel> _busLines = SampleData.busLines;
-  List<LineRouteModel> _lineRoutes = SampleData.lineRoutes;
-  List<LocationModel> _locations = SampleData.locations;
+  List<BusLineModel> _busLines = [];
+  List<LineRouteModel> _lineRoutes = [];
+  List<LocationModel> _locations = [];
 
-  final Set<String> _selectedLineIds = {
-    'line_1',
-    'line_2',
-    'line_3',
-    'line_4',
-    'line_5',
-  };
-
+  final Set<String> _selectedLineIds = {};
   String _selectedDirection = 'west_to_east';
 
   bool _isLoading = false;
   String? _errorMessage;
-  bool _isUsingSampleData = true;
 
   List<BusLineModel> get busLines => _busLines;
   List<LineRouteModel> get lineRoutes => _lineRoutes;
@@ -37,7 +28,9 @@ class MapProvider extends ChangeNotifier {
   String get selectedDirection => _selectedDirection;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  bool get isUsingSampleData => _isUsingSampleData;
+
+  bool get hasData =>
+      _busLines.isNotEmpty && _lineRoutes.isNotEmpty && _locations.isNotEmpty;
 
   List<LineRouteModel> get selectedRoutes {
     return _lineRoutes.where((route) {
@@ -48,9 +41,7 @@ class MapProvider extends ChangeNotifier {
   }
 
   List<LocationModel> get selectedRouteStops {
-    final allStopIds = selectedRoutes
-        .expand((route) => route.stopIdsOrdered)
-        .toSet();
+    final allStopIds = selectedRoutes.expand((route) => route.stopIdsOrdered).toSet();
 
     return _locations.where((location) {
       return allStopIds.contains(location.id);
@@ -91,38 +82,34 @@ class MapProvider extends ChangeNotifier {
         );
       }
 
-      if (busLines.isNotEmpty) {
-        _busLines = busLines;
-      }
-
-      if (locations.isNotEmpty) {
-        _locations = locations;
-      }
-
-      if (lineRoutes.isNotEmpty) {
-        _lineRoutes = lineRoutes;
-      }
+      _busLines = busLines;
+      _locations = locations;
+      _lineRoutes = lineRoutes;
 
       _selectedLineIds
         ..clear()
         ..addAll(_busLines.map((line) => line.id));
 
-      _isUsingSampleData = false;
+      if (!hasData) {
+        _errorMessage = 'Unable to load transport map data.';
+      }
 
       print('SELECTED LINE IDS AFTER LOAD: $_selectedLineIds');
       print('SELECTED DIRECTION AFTER LOAD: $_selectedDirection');
       print('SELECTED ROUTES COUNT: ${selectedRoutes.length}');
       print('SELECTED ROUTE STOPS COUNT: ${selectedRouteStops.length}');
-      print('USING SAMPLE DATA: $_isUsingSampleData');
       print('========== MAP FIRESTORE LOAD SUCCESS ==========');
     } catch (e, stackTrace) {
       print('========== MAP FIRESTORE LOAD ERROR ==========');
       print('ERROR: $e');
       print(stackTrace);
-      print('Falling back to sample data.');
 
-      _errorMessage = 'Failed to load live map data. Using sample data.';
-      _isUsingSampleData = true;
+      _busLines = [];
+      _locations = [];
+      _lineRoutes = [];
+      _selectedLineIds.clear();
+
+      _errorMessage = 'Unable to load transport map data.';
     } finally {
       _isLoading = false;
       notifyListeners();
