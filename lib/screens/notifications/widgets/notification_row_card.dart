@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../../models/app_notification_model.dart';
+import '../../../widgets/common/app_surface_styles.dart';
 
 class NotificationRowCard extends StatelessWidget {
   final AppNotificationModel notification;
   final bool isRead;
   final String previewText;
   final String dateLabel;
+  final String timeLabel;
   final VoidCallback onTap;
 
   const NotificationRowCard({
@@ -15,6 +17,7 @@ class NotificationRowCard extends StatelessWidget {
     required this.isRead,
     required this.previewText,
     required this.dateLabel,
+    required this.timeLabel,
     required this.onTap,
   });
 
@@ -31,22 +34,14 @@ class NotificationRowCard extends StatelessWidget {
         : colorScheme.primary.withOpacity(0.35);
 
     return Container(
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: borderColor,
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(
-              Theme.of(context).brightness == Brightness.dark ? 0.22 : 0.08,
-            ),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+      decoration: AppSurfaceStyles.card(
+        context,
+        backgroundColor: backgroundColor,
+        borderColor: isRead
+            ? null
+            : Theme.of(context).colorScheme.primary.withOpacity(0.9),
+        radius: 16,
+        isHighlighted: !isRead,
       ),
       child: Material(
         color: Colors.transparent,
@@ -95,9 +90,19 @@ class NotificationRowCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Text(
-                  dateLabel,
-                  style: Theme.of(context).textTheme.bodySmall,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      dateLabel,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      timeLabel,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
                 ),
               ],
             ),

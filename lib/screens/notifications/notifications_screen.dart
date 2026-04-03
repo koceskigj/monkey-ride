@@ -55,12 +55,14 @@ class NotificationsScreen extends StatelessWidget {
           final isRead = provider.isRead(notification.id);
           final preview = provider.getPreviewText(notification.message);
           final dateLabel = provider.formatNotificationDate(notification.publishedAt);
+          final timeLabel = provider.formatNotificationTime(notification.publishedAt);
 
           return NotificationRowCard(
             notification: notification,
             isRead: isRead,
             previewText: preview,
             dateLabel: dateLabel,
+            timeLabel: timeLabel,
             onTap: () async {
               await provider.markAsRead(notification.id);
 

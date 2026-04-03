@@ -114,4 +114,13 @@ class NotificationsProvider extends ChangeNotifier {
 
     return '$day.$month.$year';
   }
+
+  String formatNotificationTime(DateTime? date) {
+    if (date == null) return '';
+
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+
+    return '$hour:$minute';
+  }
 }

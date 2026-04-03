@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../models/info_slide_model.dart';
+import '../../../widgets/common/app_surface_styles.dart';
 
 class InfoSlideCard extends StatelessWidget {
   final InfoSlideModel slide;
@@ -17,22 +18,10 @@ class InfoSlideCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(
-            color: colorScheme.outline.withOpacity(0.25),
-            width: 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(
-                Theme.of(context).brightness == Brightness.dark ? 0.25 : 0.08,
-              ),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
+        decoration: AppSurfaceStyles.card(
+          context,
+          backgroundColor: colorScheme.surface,
+          radius: 28,
         ),
         child: Column(
           children: [
