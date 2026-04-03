@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../core/services/arrivals_firestore_service.dart';
+import '../core/utils/app_error_messages.dart';
 import '../models/upcoming_arrival_model.dart';
 
 class ArrivalsProvider extends ChangeNotifier {
@@ -14,6 +15,7 @@ class ArrivalsProvider extends ChangeNotifier {
   List<UpcomingArrivalModel> _upcomingArrivals = [];
   bool _isLoading = false;
   String? _errorMessage;
+  AppErrorType _errorType = AppErrorType.unknown;
 
   String? _currentStopId;
   String? _currentDirection;
@@ -24,6 +26,7 @@ class ArrivalsProvider extends ChangeNotifier {
   List<UpcomingArrivalModel> get upcomingArrivals => _upcomingArrivals;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  AppErrorType get errorType => _errorType;
 
   Future<void> loadArrivals({
     required String stopId,
@@ -53,15 +56,6 @@ class ArrivalsProvider extends ChangeNotifier {
       final List<UpcomingArrivalModel> arrivals = [];
 
       for (final timetable in relevantTimetables) {
-        print(
-          '🚌 [ARRIVALS] timetable -> id: ${timetable.id}, '
-              'routeId: ${timetable.routeId}, '
-              'stopId: ${timetable.stopId}, '
-              'lineId: ${timetable.lineId}, '
-              'direction: ${timetable.direction}, '
-              'times: ${timetable.departureTimes.length}',
-        );
-
         for (final departureTime in timetable.departureTimes) {
           final parts = departureTime.split(':');
           if (parts.length != 2) continue;
@@ -81,7 +75,6 @@ class ArrivalsProvider extends ChangeNotifier {
 
           final minutesUntil = todayDeparture.difference(now).inMinutes;
 
-          // Only departures still left TODAY.
           if (minutesUntil >= 0) {
             arrivals.add(
               UpcomingArrivalModel(
@@ -102,17 +95,16 @@ class ArrivalsProvider extends ChangeNotifier {
       _upcomingArrivals = arrivals.take(5).toList();
 
       print('✅ [ARRIVALS] Computed ${_upcomingArrivals.length} upcoming arrivals');
-      for (final arrival in _upcomingArrivals) {
-        print(
-          '✅ [ARRIVALS] lineId: ${arrival.lineId}, '
-              'routeId: ${arrival.routeId}, '
-              'minutes: ${arrival.minutesUntilArrival}',
-        );
-      }
     } catch (e, stackTrace) {
       print('❌ [ARRIVALS] Error loading arrivals: $e');
       print(stackTrace);
-      _errorMessage = 'Failed to load arrivals.';
+
+      final errorInfo = AppErrorMessages.fromError(
+        e,
+        context: 'arrival times',
+      );
+      _errorMessage = errorInfo.message;
+      _errorType = errorInfo.type;
       _upcomingArrivals = [];
     } finally {
       _isLoading = false;

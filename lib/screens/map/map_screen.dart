@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:monkey_ride/core/utils/app_error_messages.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme/theme_provider.dart';
@@ -203,21 +204,17 @@ class _MapScreenState extends State<MapScreen> {
 
   Set<Polyline> _buildPolylines(MapProvider mapProvider) {
     return mapProvider.selectedRoutes.map((route) {
-      final line = mapProvider.busLines.firstWhere(
-            (line) => line.id == route.lineId,
-      );
+      final line = mapProvider.busLines.firstWhere((line) => line.id == route.lineId);
 
       return Polyline(
         polylineId: PolylineId(route.id),
         width: 5,
         color: _hexToColor(line.colorHex),
         points: route.polylinePoints
-            .map(
-              (point) => LatLng(
-            point['latitude'] ?? 0,
-            point['longitude'] ?? 0,
-          ),
-        )
+            .map((point) => LatLng(
+          point['latitude'] ?? 0,
+          point['longitude'] ?? 0,
+        ))
             .toList(),
       );
     }).toSet();
@@ -240,14 +237,10 @@ class _MapScreenState extends State<MapScreen> {
 
   Set<Marker> _buildMarkers(MapProvider mapProvider) {
     final visibleBusStops = mapProvider.selectedRouteStops;
-    final otherLocations = mapProvider.locations
-        .where((location) => location.type != 'bus_stop')
-        .toList();
+    final otherLocations =
+    mapProvider.locations.where((location) => location.type != 'bus_stop').toList();
 
-    final allVisibleLocations = [
-      ...visibleBusStops,
-      ...otherLocations,
-    ];
+    final allVisibleLocations = [...visibleBusStops, ...otherLocations];
 
     return allVisibleLocations.map((location) {
       final lineNumbers = mapProvider.getLineNumbersForStop(location.id);
@@ -278,15 +271,13 @@ class _MapScreenState extends State<MapScreen> {
     final isDarkMode = context.watch<ThemeProvider>().isDarkMode;
 
     if (mapProvider.isLoading && !mapProvider.hasData) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (mapProvider.errorMessage != null && !mapProvider.hasData) {
       return AppErrorState(
         message: mapProvider.errorMessage!,
-        imageAssetPath: 'assets/images/error/mende_server_error.png',
+        imageAssetPath: AppErrorMessages.imageForType(mapProvider.errorType),
         onRetry: mapProvider.loadMapData,
       );
     }
@@ -324,9 +315,7 @@ class _MapScreenState extends State<MapScreen> {
                 onPressed: () => _recenterToUser(locationProvider),
               ),
               const SizedBox(height: 12),
-              MapLegendButton(
-                onPressed: _showLegendDialog,
-              ),
+              MapLegendButton(onPressed: _showLegendDialog),
             ],
           ),
         ),
@@ -334,9 +323,7 @@ class _MapScreenState extends State<MapScreen> {
           left: 0,
           right: 0,
           bottom: 36,
-          child: MapFiltersButton(
-            onPressed: _showFiltersSheet,
-          ),
+          child: MapFiltersButton(onPressed: _showFiltersSheet),
         ),
       ],
     );
@@ -356,11 +343,7 @@ class _LegendImageRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Image.asset(
-          imagePath,
-          width: 22,
-          height: 22,
-        ),
+        Image.asset(imagePath, width: 22, height: 22),
         const SizedBox(width: 10),
         Text(label),
       ],

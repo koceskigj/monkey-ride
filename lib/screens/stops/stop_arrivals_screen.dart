@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:monkey_ride/core/utils/app_error_messages.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/bus_line_model.dart';
 import '../../models/location_model.dart';
 import '../../providers/arrivals_provider.dart';
 import '../../providers/map_provider.dart';
+import '../../widgets/common/app_error_state.dart';
 import 'widgets/arrival_row_card.dart';
 import 'widgets/no_buses_left_state.dart';
 
@@ -27,7 +29,10 @@ class StopArrivalsScreen extends StatelessWidget {
           direction: direction,
         )
         ..startAutoRefresh(),
-      child: _StopArrivalsView(stop: stop, direction: direction,),
+      child: _StopArrivalsView(
+        stop: stop,
+        direction: direction,
+      ),
     );
   }
 }
@@ -73,32 +78,15 @@ class _StopArrivalsView extends StatelessWidget {
             }
 
             if (arrivalsProvider.errorMessage != null) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.cloud_off, size: 56),
-                      const SizedBox(height: 16),
-                      Text(
-                        arrivalsProvider.errorMessage!,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          arrivalsProvider.loadArrivals(
-                            stopId: stop.id,
-                            direction: direction,
-                          );
-                        },
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                ),
+              return AppErrorState(
+                message: arrivalsProvider.errorMessage!,
+                imageAssetPath: AppErrorMessages.imageForType(arrivalsProvider.errorType),
+                onRetry: () {
+                  arrivalsProvider.loadArrivals(
+                    stopId: stop.id,
+                    direction: direction,
+                  );
+                },
               );
             }
 

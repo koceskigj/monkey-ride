@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:monkey_ride/screens/stops/stop_arrivals_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/bus_line_model.dart';
@@ -8,6 +7,8 @@ import '../../models/location_model.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/map_provider.dart';
 import '../../providers/stops_provider.dart';
+import '../../widgets/common/location_access_prompt.dart';
+import 'stop_arrivals_screen.dart';
 import 'widgets/stop_row_card.dart';
 import 'widgets/stops_direction_toggle.dart';
 import 'widgets/stops_search_bar.dart';
@@ -116,7 +117,6 @@ class _StopsScreenState extends State<StopsScreen> {
     final locationProvider = context.watch<LocationProvider>();
     final stopsProvider = context.watch<StopsProvider>();
 
-    // Keep text field visually synced with provider state.
     if (_searchController.text != stopsProvider.searchQuery) {
       _searchController.value = TextEditingValue(
         text: stopsProvider.searchQuery,
@@ -162,30 +162,16 @@ class _StopsScreenState extends State<StopsScreen> {
                   child: Builder(
                     builder: (context) {
                       if (!hasSearch && !locationProvider.isGranted) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.location_off_outlined,
-                                  size: 72,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Enable location services in order to see the nearest bus stops.',
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.titleMedium,
-                                ),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: locationProvider.requestPermission,
-                                  child: const Text('Enable location'),
-                                ),
-                              ],
-                            ),
-                          ),
+                        return LocationAccessPrompt(
+                          permissionState: locationProvider.permissionState,
+                          onRequestPermission: locationProvider.requestPermission,
+                          onOpenAppSettings:
+                          locationProvider.openAppSettingsPage,
+                          onOpenLocationSettings:
+                          locationProvider.openLocationSettingsPage,
+                          variant: LocationAccessPromptVariant.fullPage,
+                          imageAssetPath:
+                          'assets/images/error/mende_no_internet.png',
                         );
                       }
 

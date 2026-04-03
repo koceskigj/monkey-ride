@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:monkey_ride/core/utils/app_error_messages.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/info_provider.dart';
+import '../../widgets/common/app_error_state.dart';
 import 'widgets/info_page_indicator.dart';
 import 'widgets/info_slide_card.dart';
 
@@ -34,27 +36,10 @@ class _InfoScreenState extends State<InfoScreen> {
     }
 
     if (provider.errorMessage != null && slides.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.cloud_off, size: 56),
-              const SizedBox(height: 16),
-              Text(
-                provider.errorMessage!,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: provider.loadSlides,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
+      return AppErrorState(
+        message: provider.errorMessage!,
+        imageAssetPath: AppErrorMessages.imageForType(provider.errorType),
+        onRetry: provider.loadSlides,
       );
     }
 

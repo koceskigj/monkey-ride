@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:monkey_ride/core/utils/app_error_messages.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/notifications_provider.dart';
+import '../../widgets/common/app_error_state.dart';
 import 'widgets/notification_dialog.dart';
 import 'widgets/notification_row_card.dart';
 
@@ -19,8 +21,10 @@ class NotificationsScreen extends StatelessWidget {
     }
 
     if (provider.errorMessage != null && provider.notifications.isEmpty) {
-      return Center(
-        child: Text(provider.errorMessage!),
+      return AppErrorState(
+        message: provider.errorMessage!,
+        imageAssetPath: AppErrorMessages.imageForType(provider.errorType),
+        onRetry: provider.loadNotifications,
       );
     }
 

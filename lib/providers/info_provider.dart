@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/services/info_firestore_service.dart';
+import '../core/utils/app_error_messages.dart';
 import '../models/info_slide_model.dart';
 
 class InfoProvider extends ChangeNotifier {
@@ -12,10 +13,12 @@ class InfoProvider extends ChangeNotifier {
   List<InfoSlideModel> _slides = [];
   bool _isLoading = false;
   String? _errorMessage;
+  AppErrorType _errorType = AppErrorType.unknown;
 
   List<InfoSlideModel> get slides => _slides;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  AppErrorType get errorType => _errorType;
 
   Future<void> loadSlides() async {
     print('📘 [INFO] Starting to load info slides...');
@@ -49,7 +52,12 @@ class InfoProvider extends ChangeNotifier {
       print('❌ [INFO] Error loading info slides: $e');
       print(stackTrace);
 
-      _errorMessage = 'Failed to load info slides.';
+      final errorInfo = AppErrorMessages.fromError(
+        e,
+        context: 'app info',
+      );
+      _errorMessage = errorInfo.message;
+      _errorType = errorInfo.type;
     } finally {
       _isLoading = false;
       notifyListeners();

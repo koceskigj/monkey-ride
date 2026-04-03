@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/services/notifications_firestore_service.dart';
+import '../core/utils/app_error_messages.dart';
 import '../models/app_notification_model.dart';
 
 class NotificationsProvider extends ChangeNotifier {
@@ -16,10 +17,12 @@ class NotificationsProvider extends ChangeNotifier {
   Set<String> _readIds = {};
   bool _isLoading = false;
   String? _errorMessage;
+  AppErrorType _errorType = AppErrorType.unknown;
 
   List<AppNotificationModel> get notifications => _notifications;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  AppErrorType get errorType => _errorType;
 
   bool isRead(String id) => _readIds.contains(id);
 
@@ -67,7 +70,12 @@ class NotificationsProvider extends ChangeNotifier {
       print('ERROR: $e');
       print(stackTrace);
 
-      _errorMessage = 'Failed to load notifications.';
+      final errorInfo = AppErrorMessages.fromError(
+        e,
+        context: 'notifications',
+      );
+      _errorMessage = errorInfo.message;
+      _errorType = errorInfo.type;
     } finally {
       _isLoading = false;
       notifyListeners();

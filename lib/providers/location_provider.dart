@@ -1,112 +1,135 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
-enum LocationPermissionState {
-  checking,
+enum AppLocationPermissionState {
+  loading,
   granted,
   denied,
-  permanentlyDenied,
+  deniedForever,
   serviceDisabled,
 }
 
-class LocationProvider extends ChangeNotifier {
-  LocationPermissionState _permissionState = LocationPermissionState.checking;
+class LocationProvider extends ChangeNotifier with WidgetsBindingObserver {
   Position? _currentPosition;
-  bool _isLoadingLocation = false;
+  bool _isLoading = false;
+  AppLocationPermissionState _permissionState =
+      AppLocationPermissionState.loading;
 
-  LocationPermissionState get permissionState => _permissionState;
   Position? get currentPosition => _currentPosition;
-  bool get isLoadingLocation => _isLoadingLocation;
+  bool get isLoading => _isLoading;
+  AppLocationPermissionState get permissionState => _permissionState;
 
-  bool get isGranted => _permissionState == LocationPermissionState.granted;
-  bool get isDenied => _permissionState == LocationPermissionState.denied;
-  bool get isPermanentlyDenied =>
-      _permissionState == LocationPermissionState.permanentlyDenied;
-  bool get isServiceDisabled =>
-      _permissionState == LocationPermissionState.serviceDisabled;
+  bool get isGranted => _permissionState == AppLocationPermissionState.granted;
 
   Future<void> initialize() async {
-    await checkPermissionStatus();
-    if (isGranted) {
-      await getCurrentLocation();
-    }
+    WidgetsBinding.instance.addObserver(this);
+    await refreshLocationState();
   }
 
-  Future<void> checkPermissionStatus() async {
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      _permissionState = LocationPermissionState.serviceDisabled;
-      notifyListeners();
-      return;
-    }
-
-    final permission = await Geolocator.checkPermission();
-
-    switch (permission) {
-      case LocationPermission.always:
-      case LocationPermission.whileInUse:
-        _permissionState = LocationPermissionState.granted;
-        break;
-      case LocationPermission.denied:
-        _permissionState = LocationPermissionState.denied;
-        break;
-      case LocationPermission.deniedForever:
-        _permissionState = LocationPermissionState.permanentlyDenied;
-        break;
-      case LocationPermission.unableToDetermine:
-        _permissionState = LocationPermissionState.denied;
-        break;
-    }
-
-    notifyListeners();
-  }
-
-  Future<void> requestPermission() async {
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      _permissionState = LocationPermissionState.serviceDisabled;
-      notifyListeners();
-      return;
-    }
-
-    final permission = await Geolocator.requestPermission();
-
-    switch (permission) {
-      case LocationPermission.always:
-      case LocationPermission.whileInUse:
-        _permissionState = LocationPermissionState.granted;
-        notifyListeners();
-        await getCurrentLocation();
-        return;
-      case LocationPermission.denied:
-        _permissionState = LocationPermissionState.denied;
-        break;
-      case LocationPermission.deniedForever:
-        _permissionState = LocationPermissionState.permanentlyDenied;
-        break;
-      case LocationPermission.unableToDetermine:
-        _permissionState = LocationPermissionState.denied;
-        break;
-    }
-
-    notifyListeners();
-  }
-
-  Future<void> getCurrentLocation() async {
-    if (!isGranted) return;
-
-    _isLoadingLocation = true;
+  Future<void> refreshLocationState() async {
+    _isLoading = true;
     notifyListeners();
 
     try {
-      final position = await Geolocator.getCurrentPosition();
-      _currentPosition = position;
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _permissionState = AppLocationPermissionState.serviceDisabled;
+        _currentPosition = null;
+        return;
+      }
+
+      final permission = await Geolocator.checkPermission();
+
+      switch (permission) {
+        case LocationPermission.always:
+        case LocationPermission.whileInUse:
+          _permissionState = AppLocationPermissionState.granted;
+          await getCurrentLocation();
+          break;
+
+        case LocationPermission.denied:
+          _permissionState = AppLocationPermissionState.denied;
+          _currentPosition = null;
+          break;
+
+        case LocationPermission.deniedForever:
+          _permissionState = AppLocationPermissionState.deniedForever;
+          _currentPosition = null;
+          break;
+
+        case LocationPermission.unableToDetermine:
+          _permissionState = AppLocationPermissionState.denied;
+          _currentPosition = null;
+          break;
+      }
     } catch (_) {
-      // keep current state, just fail silently for now
+      _permissionState = AppLocationPermissionState.denied;
+      _currentPosition = null;
     } finally {
-      _isLoadingLocation = false;
+      _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> requestPermission() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _permissionState = AppLocationPermissionState.serviceDisabled;
+        _currentPosition = null;
+        return;
+      }
+
+      final permission = await Geolocator.requestPermission();
+
+      switch (permission) {
+        case LocationPermission.always:
+        case LocationPermission.whileInUse:
+          _permissionState = AppLocationPermissionState.granted;
+          await getCurrentLocation();
+          break;
+
+        case LocationPermission.denied:
+          _permissionState = AppLocationPermissionState.denied;
+          _currentPosition = null;
+          break;
+
+        case LocationPermission.deniedForever:
+          _permissionState = AppLocationPermissionState.deniedForever;
+          _currentPosition = null;
+          break;
+
+        case LocationPermission.unableToDetermine:
+          _permissionState = AppLocationPermissionState.denied;
+          _currentPosition = null;
+          break;
+      }
+    } catch (_) {
+      _permissionState = AppLocationPermissionState.denied;
+      _currentPosition = null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> getCurrentLocation() async {
+    if (_permissionState != AppLocationPermissionState.granted) return;
+
+    try {
+      _currentPosition = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+    } catch (_) {
+      _currentPosition = null;
+    }
+
+    notifyListeners();
   }
 
   Future<void> openAppSettingsPage() async {
@@ -115,5 +138,18 @@ class LocationProvider extends ChangeNotifier {
 
   Future<void> openLocationSettingsPage() async {
     await Geolocator.openLocationSettings();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      refreshLocationState();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 }
