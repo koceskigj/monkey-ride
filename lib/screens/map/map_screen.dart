@@ -1,12 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:monkey_ride/core/utils/app_error_messages.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme/theme_provider.dart';
+import '../../core/utils/app_error_messages.dart';
 import '../../models/location_model.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/map_provider.dart';
@@ -27,7 +25,9 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   GoogleMapController? _mapController;
+
   String? _darkMapStyle;
+  String? _lightMapStyle;
 
   BitmapDescriptor? _busStopMarker;
   BitmapDescriptor? _ticketOfficeMarker;
@@ -35,6 +35,7 @@ class _MapScreenState extends State<MapScreen> {
   BitmapDescriptor? _cafeMarker;
 
   bool _didLoadAssets = false;
+  bool? _lastAppliedIsDarkMode;
 
   static const CameraPosition _initialCameraPosition = CameraPosition(
     target: LatLng(41.3451, 21.5550),
@@ -44,7 +45,7 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-    _loadDarkMapStyle();
+    _loadMapStyles();
   }
 
   @override
@@ -57,15 +58,20 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  Future<void> _loadDarkMapStyle() async {
-    final style = await rootBundle.loadString(
+  Future<void> _loadMapStyles() async {
+    final darkStyle = await rootBundle.loadString(
       'assets/map_styles/dark_map_style.json',
+    );
+
+    final lightStyle = await rootBundle.loadString(
+      'assets/map_styles/light_map_style.json',
     );
 
     if (!mounted) return;
 
     setState(() {
-      _darkMapStyle = style;
+      _darkMapStyle = darkStyle;
+      _lightMapStyle = lightStyle;
     });
   }
 
@@ -113,11 +119,11 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _applyMapStyle(bool isDarkMode) async {
     if (_mapController == null) return;
 
-    if (isDarkMode) {
-      await _mapController!.setMapStyle(_darkMapStyle);
-    } else {
-      await _mapController!.setMapStyle(null);
-    }
+    final styleToApply = isDarkMode ? _darkMapStyle : _lightMapStyle;
+    if (styleToApply == null) return;
+
+    await _mapController!.setMapStyle(styleToApply);
+    _lastAppliedIsDarkMode = isDarkMode;
   }
 
   Future<void> _recenterToUser(LocationProvider locationProvider) async {
@@ -204,17 +210,21 @@ class _MapScreenState extends State<MapScreen> {
 
   Set<Polyline> _buildPolylines(MapProvider mapProvider) {
     return mapProvider.selectedRoutes.map((route) {
-      final line = mapProvider.busLines.firstWhere((line) => line.id == route.lineId);
+      final line = mapProvider.busLines.firstWhere(
+            (line) => line.id == route.lineId,
+      );
 
       return Polyline(
         polylineId: PolylineId(route.id),
         width: 5,
         color: _hexToColor(line.colorHex),
         points: route.polylinePoints
-            .map((point) => LatLng(
-          point['latitude'] ?? 0,
-          point['longitude'] ?? 0,
-        ))
+            .map(
+              (point) => LatLng(
+            point['latitude'] ?? 0,
+            point['longitude'] ?? 0,
+          ),
+        )
             .toList(),
       );
     }).toSet();
@@ -237,10 +247,14 @@ class _MapScreenState extends State<MapScreen> {
 
   Set<Marker> _buildMarkers(MapProvider mapProvider) {
     final visibleBusStops = mapProvider.selectedRouteStops;
-    final otherLocations =
-    mapProvider.locations.where((location) => location.type != 'bus_stop').toList();
+    final otherLocations = mapProvider.locations
+        .where((location) => location.type != 'bus_stop')
+        .toList();
 
-    final allVisibleLocations = [...visibleBusStops, ...otherLocations];
+    final allVisibleLocations = [
+      ...visibleBusStops,
+      ...otherLocations,
+    ];
 
     return allVisibleLocations.map((location) {
       final lineNumbers = mapProvider.getLineNumbersForStop(location.id);
@@ -270,8 +284,16 @@ class _MapScreenState extends State<MapScreen> {
     final mapProvider = context.watch<MapProvider>();
     final isDarkMode = context.watch<ThemeProvider>().isDarkMode;
 
+    if (_mapController != null && _lastAppliedIsDarkMode != isDarkMode) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _applyMapStyle(isDarkMode);
+      });
+    }
+
     if (mapProvider.isLoading && !mapProvider.hasData) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
     }
 
     if (mapProvider.errorMessage != null && !mapProvider.hasData) {
@@ -281,8 +303,6 @@ class _MapScreenState extends State<MapScreen> {
         onRetry: mapProvider.loadMapData,
       );
     }
-
-    unawaited(_applyMapStyle(isDarkMode));
 
     return Stack(
       children: [
@@ -315,7 +335,9 @@ class _MapScreenState extends State<MapScreen> {
                 onPressed: () => _recenterToUser(locationProvider),
               ),
               const SizedBox(height: 12),
-              MapLegendButton(onPressed: _showLegendDialog),
+              MapLegendButton(
+                onPressed: _showLegendDialog,
+              ),
             ],
           ),
         ),
@@ -323,7 +345,9 @@ class _MapScreenState extends State<MapScreen> {
           left: 0,
           right: 0,
           bottom: 36,
-          child: MapFiltersButton(onPressed: _showFiltersSheet),
+          child: MapFiltersButton(
+            onPressed: _showFiltersSheet,
+          ),
         ),
       ],
     );
@@ -343,7 +367,11 @@ class _LegendImageRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Image.asset(imagePath, width: 22, height: 22),
+        Image.asset(
+          imagePath,
+          width: 22,
+          height: 22,
+        ),
         const SizedBox(width: 10),
         Text(label),
       ],
