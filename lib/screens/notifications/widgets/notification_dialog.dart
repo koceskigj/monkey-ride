@@ -5,11 +5,13 @@ import '../../../models/app_notification_model.dart';
 class NotificationDialog extends StatelessWidget {
   final AppNotificationModel notification;
   final String dateLabel;
+  final String timeLabel;
 
   const NotificationDialog({
     super.key,
     required this.notification,
     required this.dateLabel,
+    required this.timeLabel,
   });
 
   @override
@@ -51,7 +53,7 @@ class NotificationDialog extends StatelessWidget {
               Align(
                 alignment: Alignment.bottomRight,
                 child: Text(
-                  dateLabel,
+                  '$dateLabel, $timeLabel',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),

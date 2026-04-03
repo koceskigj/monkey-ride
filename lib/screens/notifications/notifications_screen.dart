@@ -73,6 +73,7 @@ class NotificationsScreen extends StatelessWidget {
                 builder: (_) => NotificationDialog(
                   notification: notification,
                   dateLabel: dateLabel,
+                  timeLabel: timeLabel,
                 ),
               );
             },
