@@ -12,11 +12,13 @@ enum AppLocationPermissionState {
 class LocationProvider extends ChangeNotifier with WidgetsBindingObserver {
   Position? _currentPosition;
   bool _isLoading = false;
+  bool _isInitialized = false;
   AppLocationPermissionState _permissionState =
       AppLocationPermissionState.loading;
 
   Position? get currentPosition => _currentPosition;
   bool get isLoading => _isLoading;
+  bool get isInitialized => _isInitialized;
   AppLocationPermissionState get permissionState => _permissionState;
 
   bool get isGranted => _permissionState == AppLocationPermissionState.granted;
@@ -24,6 +26,8 @@ class LocationProvider extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> initialize() async {
     WidgetsBinding.instance.addObserver(this);
     await refreshLocationState();
+    _isInitialized = true;
+    notifyListeners();
   }
 
   Future<void> refreshLocationState() async {
@@ -44,7 +48,6 @@ class LocationProvider extends ChangeNotifier with WidgetsBindingObserver {
         case LocationPermission.always:
         case LocationPermission.whileInUse:
           _permissionState = AppLocationPermissionState.granted;
-          await getCurrentLocation();
           break;
 
         case LocationPermission.denied:
@@ -119,6 +122,9 @@ class LocationProvider extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> getCurrentLocation() async {
     if (_permissionState != AppLocationPermissionState.granted) return;
 
+    _isLoading = true;
+    notifyListeners();
+
     try {
       _currentPosition = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
@@ -127,9 +133,10 @@ class LocationProvider extends ChangeNotifier with WidgetsBindingObserver {
       );
     } catch (_) {
       _currentPosition = null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    notifyListeners();
   }
 
   Future<void> openAppSettingsPage() async {

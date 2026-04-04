@@ -128,8 +128,7 @@ class _StopsScreenState extends State<StopsScreen> {
 
     final direction = stopsProvider.selectedDirection;
     final allStopsForDirection = _stopsForDirection(mapProvider, direction);
-
-    final bool hasSearch = stopsProvider.searchQuery.trim().isNotEmpty;
+    final hasSearch = stopsProvider.searchQuery.trim().isNotEmpty;
 
     List<LocationModel> visibleStops = [];
 
@@ -175,14 +174,12 @@ class _StopsScreenState extends State<StopsScreen> {
                         );
                       }
 
-                      if (visibleStops.isEmpty) {
-                        return Center(
-                          child: Text(
-                            hasSearch
-                                ? 'No stops found for your search.'
-                                : 'No nearby stops available.',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
+                      if (!hasSearch &&
+                          locationProvider.isGranted &&
+                          locationProvider.currentPosition == null &&
+                          locationProvider.isLoading) {
+                        return const Center(
+                          child: CircularProgressIndicator(),
                         );
                       }
 

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../providers/info_provider.dart';
+import '../../providers/location_provider.dart';
+import '../../providers/notifications_provider.dart';
 import '../../providers/stops_provider.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/top_branded_app_bar.dart';
@@ -25,6 +28,24 @@ class _HomeShellState extends State<HomeShell> {
     InfoScreen(),
     StopsScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final locationProvider = context.read<LocationProvider>();
+      final notificationsProvider = context.read<NotificationsProvider>();
+      final infoProvider = context.read<InfoProvider>();
+
+      if (locationProvider.isGranted) {
+        locationProvider.getCurrentLocation();
+      }
+
+      notificationsProvider.initialize();
+      infoProvider.loadSlides();
+    });
+  }
 
   void _onTabSelected(int index) {
     final stopsProvider = context.read<StopsProvider>();
