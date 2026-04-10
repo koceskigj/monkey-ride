@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:monkey_ride/core/utils/app_error_messages.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/utils/app_error_messages.dart';
 import '../../providers/info_provider.dart';
 import '../../widgets/common/app_error_state.dart';
 import 'widgets/info_page_indicator.dart';
@@ -35,18 +35,17 @@ class _InfoScreenState extends State<InfoScreen> {
       );
     }
 
-    if (provider.errorMessage != null && slides.isEmpty) {
+    if (provider.errorMessage != null && !provider.hasData) {
       return AppErrorState(
         message: provider.errorMessage!,
-        imageAssetPath: AppErrorMessages.imageForType(provider.errorType),
+        imageAssetPath:
+        AppErrorMessages.imageForType(provider.errorType),
         onRetry: provider.loadSlides,
       );
     }
 
     if (slides.isEmpty) {
-      return const Center(
-        child: Text('No info slides available.'),
-      );
+      return const SizedBox.shrink();
     }
 
     return Column(

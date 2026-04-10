@@ -21,7 +21,7 @@ class MapProvider extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _errorMessage;
-  AppErrorType _errorType = AppErrorType.unknown;
+  AppErrorType _errorType = AppErrorType.server;
 
   List<BusLineModel> get busLines => _busLines;
   List<LineRouteModel> get lineRoutes => _lineRoutes;
@@ -44,7 +44,8 @@ class MapProvider extends ChangeNotifier {
   }
 
   List<LocationModel> get selectedRouteStops {
-    final allStopIds = selectedRoutes.expand((route) => route.stopIdsOrdered).toSet();
+    final allStopIds =
+    selectedRoutes.expand((route) => route.stopIdsOrdered).toSet();
 
     return _locations.where((location) {
       return allStopIds.contains(location.id);
@@ -54,18 +55,13 @@ class MapProvider extends ChangeNotifier {
   Future<void> loadMapData() async {
     _isLoading = true;
     _errorMessage = null;
+    _errorType = AppErrorType.server;
     notifyListeners();
-
-    print('========== MAP FIRESTORE LOAD START ==========');
 
     try {
       final busLines = await _mapFirestoreService.getBusLines();
       final locations = await _mapFirestoreService.getLocations();
       final lineRoutes = await _mapFirestoreService.getLineRoutes();
-
-      print('FIRESTORE busLines count: ${busLines.length}');
-      print('FIRESTORE locations count: ${locations.length}');
-      print('FIRESTORE lineRoutes count: ${lineRoutes.length}');
 
       _busLines = busLines;
       _locations = locations;
@@ -76,16 +72,14 @@ class MapProvider extends ChangeNotifier {
         ..addAll(_busLines.map((line) => line.id));
 
       if (!hasData) {
-        _errorMessage = "I couldn't load the transport map data.";
-        _errorType = AppErrorType.unknown;
+        final errorInfo = AppErrorMessages.fromError(
+          Exception('empty transport map data'),
+          context: 'transport map',
+        );
+        _errorMessage = errorInfo.message;
+        _errorType = errorInfo.type;
       }
-
-      print('========== MAP FIRESTORE LOAD SUCCESS ==========');
-    } catch (e, stackTrace) {
-      print('========== MAP FIRESTORE LOAD ERROR ==========');
-      print('ERROR: $e');
-      print(stackTrace);
-
+    } catch (e) {
       _busLines = [];
       _locations = [];
       _lineRoutes = [];
@@ -100,14 +94,14 @@ class MapProvider extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
-      print('========== MAP FIRESTORE LOAD END ==========');
     }
   }
 
   List<int> getLineNumbersForStop(String stopId) {
     final lineIds = _lineRoutes
         .where(
-          (route) => route.stopIdsOrdered.contains(stopId) && route.isActive,
+          (route) =>
+      route.stopIdsOrdered.contains(stopId) && route.isActive,
     )
         .map((route) => route.lineId)
         .toSet();

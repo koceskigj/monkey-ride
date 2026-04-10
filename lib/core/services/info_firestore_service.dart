@@ -16,6 +16,10 @@ class InfoFirestoreService {
         .orderBy('orderIndex')
         .get();
 
+    if (snapshot.docs.isEmpty) {
+      throw Exception('No info slides found.');
+    }
+
     return snapshot.docs
         .map((doc) => InfoSlideModel.fromMap(doc.data(), doc.id))
         .toList();

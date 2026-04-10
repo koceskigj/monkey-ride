@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/utils/app_error_messages.dart';
 import '../../models/bus_line_model.dart';
 import '../../models/location_model.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/map_provider.dart';
 import '../../providers/stops_provider.dart';
+import '../../widgets/common/app_error_state.dart';
 import '../../widgets/common/location_access_prompt.dart';
 import 'stop_arrivals_screen.dart';
 import 'widgets/stop_row_card.dart';
@@ -20,19 +22,74 @@ class StopsScreen extends StatefulWidget {
   State<StopsScreen> createState() => _StopsScreenState();
 }
 
-class _StopsScreenState extends State<StopsScreen> {
+class _StopsScreenState extends State<StopsScreen>
+    with WidgetsBindingObserver {
   late final TextEditingController _searchController;
+
+  bool _didInitialLocationCheck = false;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (!_didInitialLocationCheck) {
+      _didInitialLocationCheck = true;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+
+        final locationProvider = context.read<LocationProvider>();
+        await locationProvider.refreshLocationState();
+
+        if (locationProvider.isEnabled &&
+            locationProvider.currentPosition == null) {
+          await locationProvider.getCurrentLocation();
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+
+        final locationProvider = context.read<LocationProvider>();
+        await locationProvider.refreshLocationState();
+
+        if (locationProvider.isEnabled &&
+            locationProvider.currentPosition == null) {
+          await locationProvider.getCurrentLocation();
+        }
+      });
+    }
+  }
+
+  Future<void> _handleEnableLocation(
+      LocationProvider locationProvider,
+      ) async {
+    await locationProvider.openLocationAccessFlow();
+    await locationProvider.refreshLocationState();
+
+    if (locationProvider.isEnabled &&
+        locationProvider.currentPosition == null) {
+      await locationProvider.getCurrentLocation();
+    }
   }
 
   List<LocationModel> _stopsForDirection(
@@ -45,7 +102,8 @@ class _StopsScreenState extends State<StopsScreen> {
         .toSet();
 
     return mapProvider.locations.where((location) {
-      return location.type == 'bus_stop' && routeStopIds.contains(location.id);
+      return location.type == 'bus_stop' &&
+          routeStopIds.contains(location.id);
     }).toList();
   }
 
@@ -115,30 +173,53 @@ class _StopsScreenState extends State<StopsScreen> {
   Widget build(BuildContext context) {
     final mapProvider = context.watch<MapProvider>();
     final locationProvider = context.watch<LocationProvider>();
-    final stopsProvider = context.watch<StopsProvider>();
 
-    if (_searchController.text != stopsProvider.searchQuery) {
-      _searchController.value = TextEditingValue(
-        text: stopsProvider.searchQuery,
-        selection: TextSelection.collapsed(
-          offset: stopsProvider.searchQuery.length,
-        ),
+    final searchQuery = context.select<StopsProvider, String>(
+          (p) => p.searchQuery,
+    );
+
+    final selectedDirection = context.select<StopsProvider, String>(
+          (p) => p.selectedDirection,
+    );
+
+    final stopsProvider = context.read<StopsProvider>();
+
+    if (searchQuery.isEmpty &&
+        _searchController.text.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _searchController.clear();
+      });
+    }
+
+    if (mapProvider.isLoading && !mapProvider.hasData) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (mapProvider.errorMessage != null && !mapProvider.hasData) {
+      return AppErrorState(
+        message: mapProvider.errorMessage!,
+        imageAssetPath:
+        AppErrorMessages.imageForType(mapProvider.errorType),
+        onRetry: mapProvider.loadMapData,
       );
     }
 
-    final direction = stopsProvider.selectedDirection;
-    final allStopsForDirection = _stopsForDirection(mapProvider, direction);
-    final hasSearch = stopsProvider.searchQuery.trim().isNotEmpty;
+    final direction = selectedDirection;
+    final allStopsForDirection =
+    _stopsForDirection(mapProvider, direction);
+
+    final hasSearch = searchQuery.trim().isNotEmpty;
 
     List<LocationModel> visibleStops = [];
 
     if (hasSearch) {
       visibleStops = _searchStops(
         allStopsForDirection,
-        stopsProvider.searchQuery,
+        searchQuery,
       );
     } else if (locationProvider.currentPosition != null &&
-        locationProvider.isGranted) {
+        locationProvider.isEnabled) {
       visibleStops = _nearestStops(
         allStopsForDirection,
         locationProvider.currentPosition!,
@@ -160,22 +241,17 @@ class _StopsScreenState extends State<StopsScreen> {
                 Expanded(
                   child: Builder(
                     builder: (context) {
-                      if (!hasSearch && !locationProvider.isGranted) {
+                      if (!hasSearch && !locationProvider.isEnabled) {
                         return LocationAccessPrompt(
-                          permissionState: locationProvider.permissionState,
-                          onRequestPermission: locationProvider.requestPermission,
-                          onOpenAppSettings:
-                          locationProvider.openAppSettingsPage,
-                          onOpenLocationSettings:
-                          locationProvider.openLocationSettingsPage,
-                          variant: LocationAccessPromptVariant.fullPage,
+                          onEnableLocation: () =>
+                              _handleEnableLocation(locationProvider),
                           imageAssetPath:
-                          'assets/images/error/mende_no_internet.png',
+                          'assets/images/error/mende_location_off.png',
                         );
                       }
 
                       if (!hasSearch &&
-                          locationProvider.isGranted &&
+                          locationProvider.isEnabled &&
                           locationProvider.currentPosition == null &&
                           locationProvider.isLoading) {
                         return const Center(
@@ -185,7 +261,8 @@ class _StopsScreenState extends State<StopsScreen> {
 
                       return ListView.separated(
                         itemCount: visibleStops.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        separatorBuilder: (_, __) =>
+                        const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final stop = visibleStops[index];
                           final lines = _linesForStop(
@@ -201,10 +278,11 @@ class _StopsScreenState extends State<StopsScreen> {
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => StopArrivalsScreen(
-                                    stop: stop,
-                                    direction: direction,
-                                  ),
+                                  builder: (_) =>
+                                      StopArrivalsScreen(
+                                        stop: stop,
+                                        direction: direction,
+                                      ),
                                 ),
                               );
                             },
@@ -219,7 +297,7 @@ class _StopsScreenState extends State<StopsScreen> {
           ),
         ),
         StopsDirectionToggle(
-          selectedDirection: stopsProvider.selectedDirection,
+          selectedDirection: selectedDirection,
           onDirectionSelected: stopsProvider.selectDirection,
         ),
       ],

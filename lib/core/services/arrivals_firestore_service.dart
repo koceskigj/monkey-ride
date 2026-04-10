@@ -18,7 +18,7 @@ class ArrivalsFirestoreService {
         .where('stopId', isEqualTo: stopId)
         .where('direction', isEqualTo: direction)
         .where('isActive', isEqualTo: true)
-        .get();
+        .get(const GetOptions(source: Source.server));
 
     return snapshot.docs
         .map((doc) => StopTimetableModel.fromMap(doc.data(), doc.id))

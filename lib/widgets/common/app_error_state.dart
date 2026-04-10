@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../common/app_button.dart';
 
 class AppErrorState extends StatelessWidget {
   final String message;
@@ -14,7 +15,7 @@ class AppErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final size = MediaQuery.of(context).size;
 
     return Center(
       child: Padding(
@@ -25,21 +26,8 @@ class AppErrorState extends StatelessWidget {
             if (imageAssetPath != null)
               Image.asset(
                 imageAssetPath!,
-                height: 180,
+                height: size.height * 0.35,
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(
-                    Icons.cloud_off,
-                    size: 72,
-                    color: colorScheme.outline,
-                  );
-                },
-              )
-            else
-              Icon(
-                Icons.cloud_off,
-                size: 72,
-                color: colorScheme.outline,
               ),
             const SizedBox(height: 18),
             Text(
@@ -49,9 +37,10 @@ class AppErrorState extends StatelessWidget {
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 18),
-              ElevatedButton(
-                onPressed: onRetry,
-                child: const Text('Retry'),
+              AppButton(
+                label: 'Retry',
+                icon: Icons.refresh,
+                onPressed: onRetry!,
               ),
             ],
           ],

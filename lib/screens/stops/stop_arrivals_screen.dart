@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:monkey_ride/core/utils/app_error_messages.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/utils/app_error_messages.dart';
 import '../../models/bus_line_model.dart';
 import '../../models/location_model.dart';
 import '../../providers/arrivals_provider.dart';
@@ -80,7 +80,8 @@ class _StopArrivalsView extends StatelessWidget {
             if (arrivalsProvider.errorMessage != null) {
               return AppErrorState(
                 message: arrivalsProvider.errorMessage!,
-                imageAssetPath: AppErrorMessages.imageForType(arrivalsProvider.errorType),
+                imageAssetPath:
+                AppErrorMessages.imageForType(arrivalsProvider.errorType),
                 onRetry: () {
                   arrivalsProvider.loadArrivals(
                     stopId: stop.id,

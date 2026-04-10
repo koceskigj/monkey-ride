@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:monkey_ride/core/utils/app_error_messages.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/utils/app_error_messages.dart';
 import '../../providers/notifications_provider.dart';
 import '../../widgets/common/app_error_state.dart';
 import 'widgets/notification_dialog.dart';
@@ -20,27 +20,17 @@ class NotificationsScreen extends StatelessWidget {
       );
     }
 
-    if (provider.errorMessage != null && provider.notifications.isEmpty) {
+    if (provider.errorMessage != null && !provider.hasData) {
       return AppErrorState(
         message: provider.errorMessage!,
-        imageAssetPath: AppErrorMessages.imageForType(provider.errorType),
+        imageAssetPath:
+        AppErrorMessages.imageForType(provider.errorType),
         onRetry: provider.loadNotifications,
       );
     }
 
     if (provider.notifications.isEmpty) {
-      return RefreshIndicator(
-        onRefresh: provider.loadNotifications,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: const [
-            SizedBox(height: 180),
-            Center(
-              child: Text('No notifications yet.'),
-            ),
-          ],
-        ),
-      );
+      return const SizedBox.shrink();
     }
 
     return RefreshIndicator(
@@ -54,8 +44,10 @@ class NotificationsScreen extends StatelessWidget {
           final notification = provider.notifications[index];
           final isRead = provider.isRead(notification.id);
           final preview = provider.getPreviewText(notification.message);
-          final dateLabel = provider.formatNotificationDate(notification.publishedAt);
-          final timeLabel = provider.formatNotificationTime(notification.publishedAt);
+          final dateLabel =
+          provider.formatNotificationDate(notification.publishedAt);
+          final timeLabel =
+          provider.formatNotificationTime(notification.publishedAt);
 
           return NotificationRowCard(
             notification: notification,

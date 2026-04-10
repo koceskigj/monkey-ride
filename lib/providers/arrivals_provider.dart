@@ -15,7 +15,7 @@ class ArrivalsProvider extends ChangeNotifier {
   List<UpcomingArrivalModel> _upcomingArrivals = [];
   bool _isLoading = false;
   String? _errorMessage;
-  AppErrorType _errorType = AppErrorType.unknown;
+  AppErrorType _errorType = AppErrorType.server;
 
   String? _currentStopId;
   String? _currentDirection;
@@ -23,25 +23,32 @@ class ArrivalsProvider extends ChangeNotifier {
   Timer? _alignmentTimer;
   Timer? _refreshTimer;
 
+  bool _isDisposed = false;
+
   List<UpcomingArrivalModel> get upcomingArrivals => _upcomingArrivals;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   AppErrorType get errorType => _errorType;
 
+  void _safeNotify() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
   Future<void> loadArrivals({
     required String stopId,
     required String direction,
   }) async {
+    if (_isDisposed) return;
+
     _currentStopId = stopId;
     _currentDirection = direction;
 
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
-
-    print('🚌 [ARRIVALS] Loading arrivals...');
-    print('🚌 [ARRIVALS] stopId: $stopId');
-    print('🚌 [ARRIVALS] direction: $direction');
+    _errorType = AppErrorType.server;
+    _safeNotify();
 
     try {
       final now = DateTime.now();
@@ -51,7 +58,13 @@ class ArrivalsProvider extends ChangeNotifier {
         direction: direction,
       );
 
-      print('🚌 [ARRIVALS] Firestore returned ${relevantTimetables.length} timetable docs');
+      if (_isDisposed) return;
+
+      if (relevantTimetables.isEmpty) {
+        throw Exception(
+          'No arrival timetable data was found for stopId=$stopId and direction=$direction.',
+        );
+      }
 
       final List<UpcomingArrivalModel> arrivals = [];
 
@@ -92,12 +105,11 @@ class ArrivalsProvider extends ChangeNotifier {
             (a, b) => a.minutesUntilArrival.compareTo(b.minutesUntilArrival),
       );
 
-      _upcomingArrivals = arrivals.take(5).toList();
+      if (_isDisposed) return;
 
-      print('✅ [ARRIVALS] Computed ${_upcomingArrivals.length} upcoming arrivals');
-    } catch (e, stackTrace) {
-      print('❌ [ARRIVALS] Error loading arrivals: $e');
-      print(stackTrace);
+      _upcomingArrivals = arrivals.take(5).toList();
+    } catch (e) {
+      if (_isDisposed) return;
 
       final errorInfo = AppErrorMessages.fromError(
         e,
@@ -107,8 +119,10 @@ class ArrivalsProvider extends ChangeNotifier {
       _errorType = errorInfo.type;
       _upcomingArrivals = [];
     } finally {
+      if (_isDisposed) return;
+
       _isLoading = false;
-      notifyListeners();
+      _safeNotify();
     }
   }
 
@@ -126,6 +140,8 @@ class ArrivalsProvider extends ChangeNotifier {
     final delay = nextMinute.difference(now);
 
     _alignmentTimer = Timer(delay, () async {
+      if (_isDisposed) return;
+
       if (_currentStopId != null && _currentDirection != null) {
         await loadArrivals(
           stopId: _currentStopId!,
@@ -133,7 +149,11 @@ class ArrivalsProvider extends ChangeNotifier {
         );
       }
 
+      if (_isDisposed) return;
+
       _refreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+        if (_isDisposed) return;
+
         if (_currentStopId != null && _currentDirection != null) {
           loadArrivals(
             stopId: _currentStopId!,
@@ -169,6 +189,7 @@ class ArrivalsProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _isDisposed = true;
     stopAutoRefresh();
     super.dispose();
   }

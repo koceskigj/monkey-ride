@@ -17,17 +17,21 @@ class NotificationsProvider extends ChangeNotifier {
   Set<String> _readIds = {};
   bool _isLoading = false;
   String? _errorMessage;
-  AppErrorType _errorType = AppErrorType.unknown;
+  AppErrorType _errorType = AppErrorType.server;
 
   List<AppNotificationModel> get notifications => _notifications;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   AppErrorType get errorType => _errorType;
 
+  bool get hasData => _notifications.isNotEmpty;
+
   bool isRead(String id) => _readIds.contains(id);
 
   bool get hasUnread {
-    return _notifications.any((notification) => !_readIds.contains(notification.id));
+    return _notifications.any(
+          (notification) => !_readIds.contains(notification.id),
+    );
   }
 
   Future<void> initialize() async {
@@ -50,36 +54,23 @@ class NotificationsProvider extends ChangeNotifier {
   Future<void> loadNotifications() async {
     _isLoading = true;
     _errorMessage = null;
+    _errorType = AppErrorType.server;
     notifyListeners();
 
-    print('========== NOTIFICATIONS LOAD START ==========');
-
     try {
-      _notifications = await _service.getNotifications(limit: 20);
-
-      print('NOTIFICATIONS COUNT: ${_notifications.length}');
-      for (final notification in _notifications) {
-        print(
-          'NOTIFICATION -> id: ${notification.id}, title: ${notification.title}, publishedAt: ${notification.publishedAt}, active: ${notification.isActive}',
-        );
-      }
-
-      print('========== NOTIFICATIONS LOAD SUCCESS ==========');
-    } catch (e, stackTrace) {
-      print('========== NOTIFICATIONS LOAD ERROR ==========');
-      print('ERROR: $e');
-      print(stackTrace);
-
+      final result = await _service.getNotifications(limit: 20);
+      _notifications = result;
+    } catch (e) {
       final errorInfo = AppErrorMessages.fromError(
         e,
         context: 'notifications',
       );
       _errorMessage = errorInfo.message;
       _errorType = errorInfo.type;
+      _notifications = [];
     } finally {
       _isLoading = false;
       notifyListeners();
-      print('========== NOTIFICATIONS LOAD END ==========');
     }
   }
 

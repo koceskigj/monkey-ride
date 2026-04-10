@@ -9,7 +9,6 @@ import '../../models/location_model.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/map_provider.dart';
 import '../../widgets/common/app_error_state.dart';
-import 'widgets/location_permission_banner.dart';
 import 'widgets/map_filters_button.dart';
 import 'widgets/map_filters_sheet.dart';
 import 'widgets/map_legend_button.dart';
@@ -23,7 +22,7 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   GoogleMapController? _mapController;
 
   String? _darkMapStyle;
@@ -36,6 +35,7 @@ class _MapScreenState extends State<MapScreen> {
 
   bool _didLoadAssets = false;
   bool? _lastAppliedIsDarkMode;
+  int _mapRebuildKey = 0;
 
   static const CameraPosition _initialCameraPosition = CameraPosition(
     target: LatLng(41.3451, 21.5550),
@@ -45,7 +45,15 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadMapStyles();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _mapController?.dispose();
+    super.dispose();
   }
 
   @override
@@ -55,6 +63,21 @@ class _MapScreenState extends State<MapScreen> {
     if (!_didLoadAssets) {
       _didLoadAssets = true;
       _loadMarkerIcons();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      setState(() {
+        _mapRebuildKey++;
+      });
+
+      final isDarkMode = context.read<ThemeProvider>().isDarkMode;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await _applyMapStyle(isDarkMode);
+      });
     }
   }
 
@@ -127,9 +150,15 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _recenterToUser(LocationProvider locationProvider) async {
-    if (!locationProvider.isGranted) {
-      await locationProvider.requestPermission();
-      return;
+    await locationProvider.refreshLocationState();
+
+    if (!locationProvider.isEnabled) {
+      await locationProvider.openLocationAccessFlow();
+      await locationProvider.refreshLocationState();
+
+      if (!locationProvider.isEnabled) {
+        return;
+      }
     }
 
     if (locationProvider.currentPosition == null) {
@@ -307,6 +336,7 @@ class _MapScreenState extends State<MapScreen> {
     return Stack(
       children: [
         GoogleMap(
+          key: ValueKey(_mapRebuildKey),
           initialCameraPosition: _initialCameraPosition,
           myLocationEnabled: locationProvider.isGranted,
           myLocationButtonEnabled: false,
@@ -319,12 +349,6 @@ class _MapScreenState extends State<MapScreen> {
             _mapController = controller;
             await _applyMapStyle(isDarkMode);
           },
-        ),
-        LocationPermissionBanner(
-          permissionState: locationProvider.permissionState,
-          onRequestPermission: locationProvider.requestPermission,
-          onOpenSettings: locationProvider.openAppSettingsPage,
-          onOpenLocationSettings: locationProvider.openLocationSettingsPage,
         ),
         Positioned(
           right: 16,

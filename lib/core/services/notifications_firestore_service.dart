@@ -17,6 +17,10 @@ class NotificationsFirestoreService {
         .limit(limit)
         .get();
 
+    if (snapshot.docs.isEmpty) {
+      throw Exception('No notifications found.');
+    }
+
     return snapshot.docs
         .map((doc) => AppNotificationModel.fromMap(doc.data(), doc.id))
         .toList();

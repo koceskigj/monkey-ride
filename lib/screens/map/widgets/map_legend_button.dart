@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:monkey_ride/widgets/common/app_button.dart';
 
 class MapLegendButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -10,18 +11,10 @@ class MapLegendButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      elevation: 4,
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onPressed,
-        child: const Padding(
-          padding: EdgeInsets.all(12),
-          child: Icon(Icons.info_outline),
-        ),
-      ),
+    return AppButton(
+      icon: Icons.info_outline,
+      isIconOnly: true,
+      onPressed: onPressed,
     );
   }
 }
