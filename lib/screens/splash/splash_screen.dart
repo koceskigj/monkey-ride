@@ -70,41 +70,19 @@ class _SplashScreenState extends State<SplashScreen> {
             color: Colors.black.withOpacity(0.12),
           ),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              child: Column(
-                children: [
-                  const Spacer(),
-                  Text(
-                    'Monkey Ride',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+            child: Center(
+              child: startupProvider.isLoading
+                  ? SizedBox(
+                width: 56,
+                height: 56,
+                child: CircularProgressIndicator(
+                  strokeWidth: 4,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Prilep bus transport made simple',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white.withOpacity(0.92),
-                    ),
-                  ),
-                  const Spacer(),
-                  if (startupProvider.isLoading) ...[
-                    const CircularProgressIndicator(),
-                    const SizedBox(height: 18),
-                    Text(
-                      'Loading app...',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.white,
-                      ),
-                    ),
-                  ] else ...[
-                    const SizedBox(height: 24),
-                  ],
-                ],
-              ),
+                ),
+              )
+                  : const SizedBox.shrink(),
             ),
           ),
         ],

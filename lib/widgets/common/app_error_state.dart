@@ -26,7 +26,7 @@ class AppErrorState extends StatelessWidget {
             if (imageAssetPath != null)
               Image.asset(
                 imageAssetPath!,
-                height: size.height * 0.35,
+                height: size.height * 0.45,
                 fit: BoxFit.contain,
               ),
             const SizedBox(height: 18),
