@@ -238,7 +238,19 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 
   Set<Polyline> _buildPolylines(MapProvider mapProvider) {
-    return mapProvider.selectedRoutes.map((route) {
+    final sortedRoutes = [...mapProvider.selectedRoutes]
+      ..sort((a, b) {
+        final lineA = mapProvider.busLines.firstWhere(
+              (line) => line.id == a.lineId,
+        );
+        final lineB = mapProvider.busLines.firstWhere(
+              (line) => line.id == b.lineId,
+        );
+
+        return lineB.number.compareTo(lineA.number);
+      });
+
+    return sortedRoutes.map((route) {
       final line = mapProvider.busLines.firstWhere(
             (line) => line.id == route.lineId,
       );
@@ -246,12 +258,13 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       return Polyline(
         polylineId: PolylineId(route.id),
         width: 5,
+        zIndex: 5 - line.number,
         color: _hexToColor(line.colorHex),
         points: route.polylinePoints
             .map(
               (point) => LatLng(
-            point['latitude'] ?? 0,
-            point['longitude'] ?? 0,
+            ((point['latitude'] as num?) ?? 0).toDouble(),
+            ((point['longitude'] as num?) ?? 0).toDouble(),
           ),
         )
             .toList(),

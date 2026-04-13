@@ -22,7 +22,6 @@ class ArrivalsProvider extends ChangeNotifier {
 
   Timer? _alignmentTimer;
   Timer? _refreshTimer;
-
   bool _isDisposed = false;
 
   List<UpcomingArrivalModel> get upcomingArrivals => _upcomingArrivals;
@@ -34,6 +33,16 @@ class ArrivalsProvider extends ChangeNotifier {
     if (!_isDisposed) {
       notifyListeners();
     }
+  }
+
+  bool _isLineRunningToday(String lineId, DateTime now) {
+    final isSunday = now.weekday == DateTime.sunday;
+
+    if (lineId == 'line_4') {
+      return isSunday;
+    }
+
+    return !isSunday;
   }
 
   Future<void> loadArrivals({
@@ -69,6 +78,10 @@ class ArrivalsProvider extends ChangeNotifier {
       final List<UpcomingArrivalModel> arrivals = [];
 
       for (final timetable in relevantTimetables) {
+        if (!_isLineRunningToday(timetable.lineId, now)) {
+          continue;
+        }
+
         for (final departureTime in timetable.departureTimes) {
           final parts = departureTime.split(':');
           if (parts.length != 2) continue;
