@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../app/localization/locale_provider.dart';
 import '../../../models/location_model.dart';
 
 class PlaceDetailsSheet extends StatefulWidget {
@@ -26,6 +28,9 @@ class _PlaceDetailsSheetState extends State<PlaceDetailsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = context.watch<LocaleProvider>();
+    final languageCode = localeProvider.locale.languageCode;
+
     final images = widget.location.resolvedImages;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -52,7 +57,7 @@ class _PlaceDetailsSheetState extends State<PlaceDetailsSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      widget.location.name,
+                      widget.location.nameFor(languageCode),
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                   ),
@@ -68,10 +73,7 @@ class _PlaceDetailsSheetState extends State<PlaceDetailsSheet> {
                       ),
                       child: Text(
                         '${widget.location.discountPercent}%',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelLarge
-                            ?.copyWith(
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
                           color: colorScheme.onPrimary,
                           fontWeight: FontWeight.bold,
                         ),
@@ -80,71 +82,48 @@ class _PlaceDetailsSheetState extends State<PlaceDetailsSheet> {
                 ],
               ),
               const SizedBox(height: 16),
-              Column(
-                children: [
-                  SizedBox(
-                    height: 200,
-                    child: PageView.builder(
-                      controller: _pageController,
-                      itemCount: images.length,
-                      onPageChanged: (index) {
-                        setState(() {
-                          _currentPage = index;
-                        });
-                      },
-                      itemBuilder: (context, index) {
-                        return ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.asset(
-                            images[index],
-                            width: double.infinity,
-                            height: 200,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainerHighest,
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.image_outlined,
-                                    size: 48,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  if (images.length > 1) ...[
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        images.length,
-                            (index) => Container(
-                          width: 8,
-                          height: 8,
-                          margin:
-                          const EdgeInsets.symmetric(horizontal: 4),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _currentPage == index
-                                ? colorScheme.primary
-                                : Colors.grey.shade400,
-                          ),
-                        ),
+              SizedBox(
+                height: 200,
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: images.length,
+                  onPageChanged: (index) {
+                    setState(() => _currentPage = index);
+                  },
+                  itemBuilder: (context, index) {
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset(
+                        images[index],
+                        fit: BoxFit.cover,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              if (images.length > 1) ...[
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    images.length,
+                        (index) => Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _currentPage == index
+                            ? colorScheme.primary
+                            : Colors.grey.shade400,
                       ),
                     ),
-                  ],
-                ],
-              ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               Text(
-                widget.location.description ??
-                    'No description available.',
+                widget.location.descriptionFor(languageCode),
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
             ],
@@ -154,3 +133,4 @@ class _PlaceDetailsSheetState extends State<PlaceDetailsSheet> {
     );
   }
 }
+

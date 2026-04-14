@@ -4,8 +4,7 @@ import 'package:provider/provider.dart';
 import '../app/localization/locale_provider.dart';
 import '../app/theme/theme_provider.dart';
 
-class TopBrandedAppBar extends StatelessWidget
-    implements PreferredSizeWidget {
+class TopBrandedAppBar extends StatelessWidget implements PreferredSizeWidget {
   const TopBrandedAppBar({super.key});
 
   @override
@@ -14,17 +13,29 @@ class TopBrandedAppBar extends StatelessWidget
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
-    final localeProvider = context.read<LocaleProvider>();
+    final localeProvider = context.watch<LocaleProvider>();
+
+    final switchFlagPath = localeProvider.isEnglish
+        ? 'assets/images/flags/flag_macedonia.png'
+        : 'assets/images/flags/flag_england.png';
 
     return AppBar(
       elevation: 0,
       centerTitle: false,
       title: null,
       leading: IconButton(
-        icon: const Icon(Icons.flag_outlined),
-        onPressed: () {
-          localeProvider.toggleLocale();
-        },
+        onPressed: localeProvider.toggleLocale,
+        icon: ClipOval(
+          child: Image.asset(
+            switchFlagPath,
+            width: 24,
+            height: 24,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) {
+              return const Icon(Icons.flag_outlined);
+            },
+          ),
+        ),
       ),
       actions: [
         IconButton(
@@ -33,9 +44,7 @@ class TopBrandedAppBar extends StatelessWidget
                 ? Icons.light_mode_outlined
                 : Icons.dark_mode_outlined,
           ),
-          onPressed: () {
-            themeProvider.toggleTheme();
-          },
+          onPressed: themeProvider.toggleTheme,
         ),
         const SizedBox(width: 6),
       ],

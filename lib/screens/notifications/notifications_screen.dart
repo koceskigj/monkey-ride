@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../app/localization/locale_provider.dart';
 import '../../core/utils/app_error_messages.dart';
 import '../../providers/notifications_provider.dart';
 import '../../widgets/common/app_error_state.dart';
@@ -13,6 +14,8 @@ class NotificationsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<NotificationsProvider>();
+    final localeProvider = context.watch<LocaleProvider>();
+    final languageCode = localeProvider.locale.languageCode;
 
     if (provider.isLoading && provider.notifications.isEmpty) {
       return const Center(
@@ -29,46 +32,49 @@ class NotificationsScreen extends StatelessWidget {
       );
     }
 
-    if (provider.notifications.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
     return RefreshIndicator(
       onRefresh: provider.loadNotifications,
-      child: ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(),
+      child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: provider.notifications.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
-          final notification = provider.notifications[index];
-          final isRead = provider.isRead(notification.id);
-          final preview = provider.getPreviewText(notification.message);
-          final dateLabel =
-          provider.formatNotificationDate(notification.publishedAt);
-          final timeLabel =
-          provider.formatNotificationTime(notification.publishedAt);
+          final n = provider.notifications[index];
+          final localizedTitle = n.titleFor(languageCode);
+          final localizedMessage = n.messageFor(languageCode);
 
-          return NotificationRowCard(
-            notification: notification,
-            isRead: isRead,
-            previewText: preview,
-            dateLabel: dateLabel,
-            timeLabel: timeLabel,
-            onTap: () async {
-              await provider.markAsRead(notification.id);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: NotificationRowCard(
+              notification: n,
+              titleText: localizedTitle,
+              isRead: provider.isRead(n.id),
+              previewText:
+              provider.getPreviewText(localizedMessage),
+              dateLabel: provider.formatNotificationDate(
+                n.publishedAt,
+              ),
+              timeLabel: provider.formatNotificationTime(
+                n.publishedAt,
+              ),
+              onTap: () async {
+                await provider.markAsRead(n.id);
 
-              if (!context.mounted) return;
+                if (!context.mounted) return;
 
-              showDialog(
-                context: context,
-                builder: (_) => NotificationDialog(
-                  notification: notification,
-                  dateLabel: dateLabel,
-                  timeLabel: timeLabel,
-                ),
-              );
-            },
+                showDialog(
+                  context: context,
+                  builder: (_) => NotificationDialog(
+                    notification: n,
+                    dateLabel: provider.formatNotificationDate(
+                      n.publishedAt,
+                    ),
+                    timeLabel: provider.formatNotificationTime(
+                      n.publishedAt,
+                    ),
+                  ),
+                );
+              },
+            ),
           );
         },
       ),

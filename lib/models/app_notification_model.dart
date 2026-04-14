@@ -1,7 +1,9 @@
 class AppNotificationModel {
   final String id;
-  final String title;
-  final String message;
+  final String titleEn;
+  final String titleMk;
+  final String messageEn;
+  final String messageMk;
   final String type;
   final bool isActive;
   final DateTime? publishedAt;
@@ -9,8 +11,10 @@ class AppNotificationModel {
 
   const AppNotificationModel({
     required this.id,
-    required this.title,
-    required this.message,
+    required this.titleEn,
+    required this.titleMk,
+    required this.messageEn,
+    required this.messageMk,
     required this.type,
     required this.isActive,
     this.publishedAt,
@@ -23,8 +27,10 @@ class AppNotificationModel {
       ) {
     return AppNotificationModel(
       id: documentId,
-      title: map['title'] ?? '',
-      message: map['message'] ?? '',
+      titleEn: map['titleEn'] ?? '',
+      titleMk: map['titleMk'] ?? '',
+      messageEn: map['messageEn'] ?? '',
+      messageMk: map['messageMk'] ?? '',
       type: map['type'] ?? 'info',
       isActive: map['isActive'] ?? true,
       publishedAt: map['publishedAt']?.toDate(),
@@ -34,12 +40,32 @@ class AppNotificationModel {
 
   Map<String, dynamic> toMap() {
     return {
-      'title': title,
-      'message': message,
+      'titleEn': titleEn,
+      'titleMk': titleMk,
+      'messageEn': messageEn,
+      'messageMk': messageMk,
       'type': type,
       'isActive': isActive,
       'publishedAt': publishedAt,
       'expiresAt': expiresAt,
     };
+  }
+
+  String titleFor(String languageCode) {
+    if (languageCode == 'mk') {
+      return titleMk.trim().isNotEmpty ? titleMk : titleEn;
+    }
+    return titleEn.trim().isNotEmpty ? titleEn : titleMk;
+  }
+
+  String messageFor(String languageCode) {
+    if (languageCode == 'mk') {
+      return messageMk.trim().isNotEmpty
+          ? messageMk
+          : messageEn;
+    }
+    return messageEn.trim().isNotEmpty
+        ? messageEn
+        : messageMk;
   }
 }

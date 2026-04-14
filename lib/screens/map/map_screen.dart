@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
+import '../../app/localization/locale_provider.dart';
 import '../../app/theme/theme_provider.dart';
 import '../../core/utils/app_error_messages.dart';
 import '../../models/location_model.dart';
@@ -178,34 +179,36 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _showLegendDialog() {
+  void _showLegendDialog(String languageCode) {
     showDialog(
       context: context,
       builder: (context) {
-        return const AlertDialog(
-          title: Text('Map Legend'),
+        return AlertDialog(
+          title: Text(
+            languageCode == 'mk' ? 'Легенда на мапа' : 'Map Legend',
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _LegendImageRow(
                 imagePath: 'assets/icons/monkey_stop.png',
-                label: 'Bus stop',
+                label: languageCode == 'mk' ? 'Постoјка' : 'Bus stop',
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               _LegendImageRow(
                 imagePath: 'assets/icons/ticket_office.png',
-                label: 'Ticket office',
+                label: languageCode == 'mk' ? 'Билетара' : 'Ticket office',
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               _LegendImageRow(
                 imagePath: 'assets/icons/attraction.png',
-                label: 'Attraction',
+                label: languageCode == 'mk' ? 'Атракција' : 'Attraction',
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               _LegendImageRow(
                 imagePath: 'assets/icons/cafe.png',
-                label: 'Cafe',
+                label: languageCode == 'mk' ? 'Кафуле' : 'Cafe',
               ),
             ],
           ),
@@ -287,7 +290,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     }
   }
 
-  Set<Marker> _buildMarkers(MapProvider mapProvider) {
+  Set<Marker> _buildMarkers(
+      MapProvider mapProvider,
+      String languageCode,
+      ) {
     final visibleBusStops = mapProvider.selectedRouteStops;
     final otherLocations = mapProvider.locations
         .where((location) => location.type != 'bus_stop')
@@ -306,10 +312,14 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         position: LatLng(location.latitude, location.longitude),
         icon: _markerIconForType(location.type),
         infoWindow: InfoWindow(
-          title: location.name,
+          title: location.nameFor(languageCode),
           snippet: location.type == 'bus_stop'
-              ? 'Lines: ${lineNumbers.join(', ')}'
-              : mapProvider.getShortDescription(location.description),
+              ? (languageCode == 'mk'
+              ? 'Линии: ${lineNumbers.join(', ')}'
+              : 'Lines: ${lineNumbers.join(', ')}')
+              : mapProvider.getShortDescription(
+            location.descriptionFor(languageCode),
+          ),
         ),
         onTap: () {
           if (location.type == 'landmark' || location.type == 'cafe') {
@@ -322,6 +332,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = context.watch<LocaleProvider>();
+    final languageCode = localeProvider.locale.languageCode;
+
     final locationProvider = context.watch<LocationProvider>();
     final mapProvider = context.watch<MapProvider>();
     final isDarkMode = context.watch<ThemeProvider>().isDarkMode;
@@ -357,7 +370,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           compassEnabled: true,
           mapToolbarEnabled: false,
           polylines: _buildPolylines(mapProvider),
-          markers: _buildMarkers(mapProvider),
+          markers: _buildMarkers(mapProvider, languageCode),
           onMapCreated: (controller) async {
             _mapController = controller;
             await _applyMapStyle(isDarkMode);
@@ -373,7 +386,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               ),
               const SizedBox(height: 12),
               MapLegendButton(
-                onPressed: _showLegendDialog,
+                onPressed: () => _showLegendDialog(languageCode),
               ),
             ],
           ),

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:monkey_ride/models/info_slide_model.dart';
+import 'package:provider/provider.dart';
 
-import '../../../models/info_slide_model.dart';
+import '../../../app/localization/locale_provider.dart';
+
 import '../../../widgets/common/app_surface_styles.dart';
 
 class InfoSlideCard extends StatefulWidget {
@@ -32,16 +35,15 @@ class _InfoSlideCardState extends State<InfoSlideCard> {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = context.watch<LocaleProvider>();
+    final languageCode = localeProvider.locale.languageCode;
+
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final scrollbarThumbColor = isDark
-        ? colorScheme.primary.withOpacity(0.85)
-        : colorScheme.outline.withOpacity(0.9);
-
-    final dividerColor = isDark
-        ? colorScheme.primary.withOpacity(0.55)
-        : colorScheme.outline.withOpacity(0.75);
+        ? colorScheme.primary.withOpacity(0.75)
+        : colorScheme.primary.withOpacity(0.9);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -60,12 +62,9 @@ class _InfoSlideCardState extends State<InfoSlideCard> {
                 child: Column(
                   children: [
                     Text(
-                      widget.slide.title,
+                      widget.slide.titleFor(languageCode),
                       textAlign: TextAlign.center,
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
-                          ?.copyWith(
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -73,15 +72,13 @@ class _InfoSlideCardState extends State<InfoSlideCard> {
                     Expanded(
                       child: ScrollbarTheme(
                         data: ScrollbarTheme.of(context).copyWith(
-                          thumbVisibility:
-                          const WidgetStatePropertyAll(true),
-                          thickness:
-                          const WidgetStatePropertyAll(4),
+                          thumbVisibility: const WidgetStatePropertyAll(true),
+                          thickness: const WidgetStatePropertyAll(4),
                           radius: const Radius.circular(999),
-                          thumbColor:
-                          WidgetStatePropertyAll(scrollbarThumbColor),
-                          trackVisibility:
-                          const WidgetStatePropertyAll(false),
+                          thumbColor: WidgetStatePropertyAll(
+                            scrollbarThumbColor,
+                          ),
+                          trackVisibility: const WidgetStatePropertyAll(false),
                         ),
                         child: Scrollbar(
                           controller: _textScrollController,
@@ -90,12 +87,9 @@ class _InfoSlideCardState extends State<InfoSlideCard> {
                             controller: _textScrollController,
                             padding: const EdgeInsets.only(right: 10),
                             child: Text(
-                              widget.slide.description,
+                              widget.slide.descriptionFor(languageCode),
                               textAlign: TextAlign.center,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
-                                  ?.copyWith(
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                 height: 1.45,
                               ),
                             ),
@@ -109,8 +103,8 @@ class _InfoSlideCardState extends State<InfoSlideCard> {
             ),
             Divider(
               height: 1,
-              thickness: 1.4,
-              color: dividerColor,
+              thickness: 1.6,
+              color: colorScheme.outline,
             ),
             Expanded(
               flex: 4,
@@ -131,10 +125,10 @@ class _InfoSlideCardState extends State<InfoSlideCard> {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            'Image not found',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium,
+                            languageCode == 'mk'
+                                ? 'Сликата не е пронајдена'
+                                : 'Image not found',
+                            style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
                       );

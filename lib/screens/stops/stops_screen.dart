@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
+import '../../app/localization/locale_provider.dart';
 import '../../core/utils/app_error_messages.dart';
 import '../../models/bus_line_model.dart';
 import '../../models/location_model.dart';
@@ -25,7 +26,6 @@ class StopsScreen extends StatefulWidget {
 class _StopsScreenState extends State<StopsScreen>
     with WidgetsBindingObserver {
   late final TextEditingController _searchController;
-
   bool _didInitialLocationCheck = false;
 
   @override
@@ -80,9 +80,7 @@ class _StopsScreenState extends State<StopsScreen>
     }
   }
 
-  Future<void> _handleEnableLocation(
-      LocationProvider locationProvider,
-      ) async {
+  Future<void> _handleEnableLocation(LocationProvider locationProvider) async {
     await locationProvider.openLocationAccessFlow();
     await locationProvider.refreshLocationState();
 
@@ -158,34 +156,39 @@ class _StopsScreenState extends State<StopsScreen>
   List<LocationModel> _searchStops(
       List<LocationModel> stops,
       String query,
+      String languageCode,
       ) {
     final normalized = query.trim().toLowerCase();
 
     final filtered = stops.where((stop) {
-      return stop.name.toLowerCase().contains(normalized);
+      return stop.nameFor(languageCode).toLowerCase().contains(normalized);
     }).toList()
-      ..sort((a, b) => a.name.compareTo(b.name));
+      ..sort(
+            (a, b) => a
+            .nameFor(languageCode)
+            .compareTo(b.nameFor(languageCode)),
+      );
 
     return filtered;
   }
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = context.watch<LocaleProvider>();
+    final languageCode = localeProvider.locale.languageCode;
+
     final mapProvider = context.watch<MapProvider>();
     final locationProvider = context.watch<LocationProvider>();
 
-    final searchQuery = context.select<StopsProvider, String>(
-          (p) => p.searchQuery,
-    );
+    final searchQuery =
+    context.select<StopsProvider, String>((p) => p.searchQuery);
 
-    final selectedDirection = context.select<StopsProvider, String>(
-          (p) => p.selectedDirection,
-    );
+    final selectedDirection =
+    context.select<StopsProvider, String>((p) => p.selectedDirection);
 
     final stopsProvider = context.read<StopsProvider>();
 
-    if (searchQuery.isEmpty &&
-        _searchController.text.isNotEmpty) {
+    if (searchQuery.isEmpty && _searchController.text.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         _searchController.clear();
@@ -193,7 +196,9 @@ class _StopsScreenState extends State<StopsScreen>
     }
 
     if (mapProvider.isLoading && !mapProvider.hasData) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
     }
 
     if (mapProvider.errorMessage != null && !mapProvider.hasData) {
@@ -205,9 +210,8 @@ class _StopsScreenState extends State<StopsScreen>
       );
     }
 
-    final direction = selectedDirection;
     final allStopsForDirection =
-    _stopsForDirection(mapProvider, direction);
+    _stopsForDirection(mapProvider, selectedDirection);
 
     final hasSearch = searchQuery.trim().isNotEmpty;
 
@@ -217,6 +221,7 @@ class _StopsScreenState extends State<StopsScreen>
       visibleStops = _searchStops(
         allStopsForDirection,
         searchQuery,
+        languageCode,
       );
     } else if (locationProvider.currentPosition != null &&
         locationProvider.isEnabled) {
@@ -268,21 +273,21 @@ class _StopsScreenState extends State<StopsScreen>
                           final lines = _linesForStop(
                             mapProvider,
                             stop.id,
-                            direction,
+                            selectedDirection,
                           );
 
                           return StopRowCard(
                             stop: stop,
                             lines: lines,
+                            languageCode: languageCode,
                             showNearby: !hasSearch,
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      StopArrivalsScreen(
-                                        stop: stop,
-                                        direction: direction,
-                                      ),
+                                  builder: (_) => StopArrivalsScreen(
+                                    stop: stop,
+                                    direction: selectedDirection,
+                                  ),
                                 ),
                               );
                             },

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../app/localization/locale_provider.dart';
 import '../../../models/app_notification_model.dart';
 
 class NotificationDialog extends StatelessWidget {
@@ -16,6 +18,8 @@ class NotificationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = context.watch<LocaleProvider>();
+    final languageCode = localeProvider.locale.languageCode;
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Dialog(
@@ -28,41 +32,35 @@ class NotificationDialog extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
-            mainAxisSize: MainAxisSize.min, // 👈 important
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                notification.title,
+                notification.titleFor(languageCode),
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 16),
-
-              /// 👇 THIS is the fix
               Flexible(
                 child: SingleChildScrollView(
                   child: Text(
-                    notification.message,
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    notification.messageFor(languageCode),
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
               Align(
                 alignment: Alignment.bottomRight,
-                child: Text(
-                  '$dateLabel, $timeLabel',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                child: Text('$dateLabel, $timeLabel'),
               ),
               const SizedBox(height: 20),
-
               Center(
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Close'),
+                  child: Text(
+                    languageCode == 'mk' ? 'Затвори' : 'Close',
+                  ),
                 ),
               ),
             ],

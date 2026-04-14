@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:monkey_ride/screens/info/widgets/info_slide_card.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/utils/app_error_messages.dart';
 import '../../providers/info_provider.dart';
 import '../../widgets/common/app_error_state.dart';
-import 'widgets/info_page_indicator.dart';
-import 'widgets/info_slide_card.dart';
+
 
 class InfoScreen extends StatefulWidget {
   const InfoScreen({super.key});
@@ -30,16 +30,13 @@ class _InfoScreenState extends State<InfoScreen> {
     final slides = provider.slides;
 
     if (provider.isLoading && slides.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (provider.errorMessage != null && !provider.hasData) {
       return AppErrorState(
         message: provider.errorMessage!,
-        imageAssetPath:
-        AppErrorMessages.imageForType(provider.errorType),
+        imageAssetPath: AppErrorMessages.imageForType(provider.errorType),
         onRetry: provider.loadSlides,
       );
     }
@@ -57,9 +54,7 @@ class _InfoScreenState extends State<InfoScreen> {
               controller: _pageController,
               itemCount: slides.length,
               onPageChanged: (index) {
-                setState(() {
-                  _currentPage = index;
-                });
+                setState(() => _currentPage = index);
               },
               itemBuilder: (context, index) {
                 return ListView(
@@ -79,9 +74,22 @@ class _InfoScreenState extends State<InfoScreen> {
         ),
         Padding(
           padding: const EdgeInsets.only(bottom: 22),
-          child: InfoPageIndicator(
-            itemCount: slides.length,
-            currentIndex: _currentPage,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              slides.length,
+                  (index) => Container(
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _currentPage == index
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey.shade400,
+                ),
+              ),
+            ),
           ),
         ),
       ],

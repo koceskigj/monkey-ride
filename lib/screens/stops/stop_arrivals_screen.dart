@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../app/localization/locale_provider.dart';
 import '../../core/utils/app_error_messages.dart';
 import '../../models/bus_line_model.dart';
 import '../../models/location_model.dart';
@@ -48,6 +49,9 @@ class _StopArrivalsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = context.watch<LocaleProvider>();
+    final languageCode = localeProvider.locale.languageCode;
+
     final arrivalsProvider = context.watch<ArrivalsProvider>();
     final mapProvider = context.watch<MapProvider>();
 
@@ -67,7 +71,7 @@ class _StopArrivalsView extends StatelessWidget {
         appBar: AppBar(
           centerTitle: false,
           titleSpacing: 0,
-          title: Text(stop.name),
+          title: Text(stop.nameFor(languageCode)),
         ),
         body: Builder(
           builder: (context) {
@@ -80,8 +84,9 @@ class _StopArrivalsView extends StatelessWidget {
             if (arrivalsProvider.errorMessage != null) {
               return AppErrorState(
                 message: arrivalsProvider.errorMessage!,
-                imageAssetPath:
-                AppErrorMessages.imageForType(arrivalsProvider.errorType),
+                imageAssetPath: AppErrorMessages.imageForType(
+                  arrivalsProvider.errorType,
+                ),
                 onRetry: () {
                   arrivalsProvider.loadArrivals(
                     stopId: stop.id,

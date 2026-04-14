@@ -1,10 +1,12 @@
 class LocationModel {
   final String id;
-  final String name;
+  final String nameEn;
+  final String nameMk;
   final String type;
   final double latitude;
   final double longitude;
-  final String? description;
+  final String? descriptionEn;
+  final String? descriptionMk;
   final bool isActive;
   final List<String> searchKeywords;
   final List<String> lineIds;
@@ -15,11 +17,13 @@ class LocationModel {
 
   const LocationModel({
     required this.id,
-    required this.name,
+    required this.nameEn,
+    required this.nameMk,
     required this.type,
     required this.latitude,
     required this.longitude,
-    this.description,
+    this.descriptionEn,
+    this.descriptionMk,
     required this.isActive,
     required this.searchKeywords,
     this.lineIds = const [],
@@ -29,14 +33,25 @@ class LocationModel {
     this.updatedAt,
   });
 
-  factory LocationModel.fromMap(Map<String, dynamic> map, String documentId) {
+  factory LocationModel.fromMap(
+      Map<String, dynamic> map,
+      String documentId,
+      ) {
+    final fallbackName = map['name']?.toString() ?? '';
+
     return LocationModel(
       id: documentId,
-      name: map['name'] ?? '',
+      nameEn: (map['nameEn']?.toString().trim().isNotEmpty ?? false)
+          ? map['nameEn'].toString()
+          : fallbackName,
+      nameMk: (map['nameMk']?.toString().trim().isNotEmpty ?? false)
+          ? map['nameMk'].toString()
+          : fallbackName,
       type: map['type'] ?? '',
       latitude: (map['latitude'] ?? 0).toDouble(),
       longitude: (map['longitude'] ?? 0).toDouble(),
-      description: map['description'],
+      descriptionEn: map['descriptionEn'],
+      descriptionMk: map['descriptionMk'],
       isActive: map['isActive'] ?? true,
       searchKeywords: List<String>.from(map['searchKeywords'] ?? []),
       lineIds: List<String>.from(map['lineIds'] ?? []),
@@ -49,11 +64,13 @@ class LocationModel {
 
   Map<String, dynamic> toMap() {
     return {
-      'name': name,
+      'nameEn': nameEn,
+      'nameMk': nameMk,
       'type': type,
       'latitude': latitude,
       'longitude': longitude,
-      'description': description,
+      'descriptionEn': descriptionEn,
+      'descriptionMk': descriptionMk,
       'isActive': isActive,
       'searchKeywords': searchKeywords,
       'lineIds': lineIds,
@@ -62,6 +79,25 @@ class LocationModel {
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };
+  }
+
+  String nameFor(String languageCode) {
+    if (languageCode == 'mk') {
+      return nameMk.trim().isNotEmpty ? nameMk : nameEn;
+    }
+    return nameEn.trim().isNotEmpty ? nameEn : nameMk;
+  }
+
+  String descriptionFor(String languageCode) {
+    if (languageCode == 'mk') {
+      return (descriptionMk?.trim().isNotEmpty ?? false)
+          ? descriptionMk!
+          : (descriptionEn ?? '');
+    }
+
+    return (descriptionEn?.trim().isNotEmpty ?? false)
+        ? descriptionEn!
+        : (descriptionMk ?? '');
   }
 
   List<String> get resolvedImages {

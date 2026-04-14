@@ -7,6 +7,7 @@ import 'nearby_badge.dart';
 class StopRowCard extends StatelessWidget {
   final LocationModel stop;
   final List<BusLineModel> lines;
+  final String languageCode;
   final bool showNearby;
   final VoidCallback onTap;
 
@@ -14,6 +15,7 @@ class StopRowCard extends StatelessWidget {
     super.key,
     required this.stop,
     required this.lines,
+    required this.languageCode,
     required this.showNearby,
     required this.onTap,
   });
@@ -34,7 +36,7 @@ class StopRowCard extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                stop.name,
+                stop.nameFor(languageCode),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
