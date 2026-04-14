@@ -8,7 +8,8 @@ class LocationModel {
   final bool isActive;
   final List<String> searchKeywords;
   final List<String> lineIds;
-  final List<String> imageUrls;
+  final List<String> imageAssetPaths;
+  final int? discountPercent;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -22,7 +23,8 @@ class LocationModel {
     required this.isActive,
     required this.searchKeywords,
     this.lineIds = const [],
-    this.imageUrls = const [],
+    this.imageAssetPaths = const [],
+    this.discountPercent,
     this.createdAt,
     this.updatedAt,
   });
@@ -38,7 +40,8 @@ class LocationModel {
       isActive: map['isActive'] ?? true,
       searchKeywords: List<String>.from(map['searchKeywords'] ?? []),
       lineIds: List<String>.from(map['lineIds'] ?? []),
-      imageUrls: List<String>.from(map['imageUrls'] ?? []),
+      imageAssetPaths: List<String>.from(map['imageAssetPaths'] ?? []),
+      discountPercent: map['discountPercent'],
       createdAt: map['createdAt']?.toDate(),
       updatedAt: map['updatedAt']?.toDate(),
     );
@@ -54,9 +57,20 @@ class LocationModel {
       'isActive': isActive,
       'searchKeywords': searchKeywords,
       'lineIds': lineIds,
-      'imageUrls': imageUrls,
+      'imageAssetPaths': imageAssetPaths,
+      'discountPercent': discountPercent,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };
+  }
+
+  List<String> get resolvedImages {
+    if (imageAssetPaths.isEmpty) {
+      return ['assets/images/default.png'];
+    }
+
+    return imageAssetPaths
+        .map((name) => 'assets/images/locations/$name.jpg')
+        .toList();
   }
 }

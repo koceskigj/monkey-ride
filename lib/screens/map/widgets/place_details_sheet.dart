@@ -26,14 +26,14 @@ class _PlaceDetailsSheetState extends State<PlaceDetailsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final images = widget.location.imageUrls;
+    final images = widget.location.resolvedImages;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         child: SingleChildScrollView(
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
@@ -47,49 +47,78 @@ class _PlaceDetailsSheetState extends State<PlaceDetailsSheet> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
-                widget.location.name,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 16),
-              if (images.isEmpty)
-                Container(
-                  width: double.infinity,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.location.name,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
                   ),
-                  child: const Center(
-                    child: Icon(Icons.image_outlined, size: 48),
-                  ),
-                )
-              else
-                Column(
-                  children: [
-                    SizedBox(
-                      height: 200,
-                      child: PageView.builder(
-                        controller: _pageController,
-                        itemCount: images.length,
-                        onPageChanged: (index) {
-                          setState(() {
-                            _currentPage = index;
-                          });
-                        },
-                        itemBuilder: (context, index) {
-                          return ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.network(
-                              images[index],
-                              width: double.infinity,
-                              height: 200,
-                              fit: BoxFit.cover,
-                            ),
-                          );
-                        },
+                  if (widget.location.discountPercent != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        '${widget.location.discountPercent}%',
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelLarge
+                            ?.copyWith(
+                          color: colorScheme.onPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Column(
+                children: [
+                  SizedBox(
+                    height: 200,
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: images.length,
+                      onPageChanged: (index) {
+                        setState(() {
+                          _currentPage = index;
+                        });
+                      },
+                      itemBuilder: (context, index) {
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.asset(
+                            images[index],
+                            width: double.infinity,
+                            height: 200,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest,
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.image_outlined,
+                                    size: 48,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  if (images.length > 1) ...[
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -98,21 +127,24 @@ class _PlaceDetailsSheetState extends State<PlaceDetailsSheet> {
                             (index) => Container(
                           width: 8,
                           height: 8,
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          margin:
+                          const EdgeInsets.symmetric(horizontal: 4),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: _currentPage == index
-                                ? Theme.of(context).colorScheme.primary
+                                ? colorScheme.primary
                                 : Colors.grey.shade400,
                           ),
                         ),
                       ),
                     ),
                   ],
-                ),
+                ],
+              ),
               const SizedBox(height: 16),
               Text(
-                widget.location.description ?? 'No description available.',
+                widget.location.description ??
+                    'No description available.',
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
             ],

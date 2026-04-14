@@ -73,6 +73,7 @@ flutter:
     - assets/images/info/
     - assets/images/error/
     - assets/images/splash/
+    - assets/images/locations/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
