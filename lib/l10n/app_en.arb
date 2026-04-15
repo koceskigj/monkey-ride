@@ -1,0 +1,52 @@
+{
+  "@@locale": "en",
+  "bottomNavMap": "Map",
+  "bottomNavNotifications": "Notifications",
+  "bottomNavInfo": "Info",
+  "bottomNavStops": "Stops",
+  "filters": "Filters",
+  "lines": "Lines",
+  "lineLabel": "Line {number}",
+  "@lineLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "direction": "Direction",
+  "westToEast": "West to East",
+  "eastToWest": "East to West",
+  "searchBusStopHint": "Please enter a bus stop",
+  "nearby": "Nearby",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "close": "Close",
+  "noBusesLeft": "No more buses tonight. Just Gley!",
+  "enableLocation": "Enable location",
+  "locationMessage": "Send me a signal to generate nearest bus stops.",
+
+  "today": "Today",
+  "yesterday": "Yesterday",
+
+  "now": "Now",
+  "minutesShort": "{minutes} min.",
+  "@minutesShort": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+
+  "hoursShort": "{hours}h. +",
+  "@hoursShort": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+
+  "errorNoInternet": "Sorry to say this, but your internet is unstable.",
+  "errorServer": "I'm trying to find the cable that's causing the problem. Sorry for the inconvenience.",
+  "retry": "Retry"
+}
+
+

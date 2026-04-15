@@ -186,14 +186,14 @@ class ArrivalsProvider extends ChangeNotifier {
   }
 
   String formatArrivalText(int minutes) {
-    if (minutes <= 1) return 'Now';
+    if (minutes <= 1) return 'now';
 
     if (minutes >= 180) {
       final hours = minutes ~/ 60;
-      return '${hours}h. +';
+      return 'hours:$hours';
     }
 
-    return '$minutes min.';
+    return 'minutes:$minutes';
   }
 
   bool isArrivingSoon(int minutes) {

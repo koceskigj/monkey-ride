@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../providers/notifications_provider.dart';
 
 class BottomNavBar extends StatelessWidget {
@@ -16,30 +17,34 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasUnread = context.watch<NotificationsProvider>().hasUnread;
+    final l10n = AppLocalizations.of(context)!;
 
     return NavigationBar(
       selectedIndex: currentIndex,
       onDestinationSelected: onTap,
       destinations: [
-        const NavigationDestination(
-          icon: Icon(Icons.map_outlined),
-          selectedIcon: Icon(Icons.map),
-          label: 'Map',
+        NavigationDestination(
+          icon: const Icon(Icons.map_outlined),
+          selectedIcon: const Icon(Icons.map),
+          label: l10n.bottomNavMap,
         ),
         NavigationDestination(
           icon: _NotificationIcon(hasUnread: hasUnread),
-          selectedIcon: _NotificationIcon(hasUnread: hasUnread, filled: true),
-          label: 'Notifications',
+          selectedIcon: _NotificationIcon(
+            hasUnread: hasUnread,
+            filled: true,
+          ),
+          label: l10n.bottomNavNotifications,
         ),
-        const NavigationDestination(
-          icon: Icon(Icons.info_outline),
-          selectedIcon: Icon(Icons.info),
-          label: 'Info',
+        NavigationDestination(
+          icon: const Icon(Icons.info_outline),
+          selectedIcon: const Icon(Icons.info),
+          label: l10n.bottomNavInfo,
         ),
-        const NavigationDestination(
-          icon: Icon(Icons.location_on_outlined),
-          selectedIcon: Icon(Icons.location_on),
-          label: 'Stops',
+        NavigationDestination(
+          icon: const Icon(Icons.location_on_outlined),
+          selectedIcon: const Icon(Icons.location_on),
+          label: l10n.bottomNavStops,
         ),
       ],
     );
@@ -60,7 +65,11 @@ class _NotificationIcon extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Icon(filled ? Icons.notifications : Icons.notifications_outlined),
+        Icon(
+          filled
+              ? Icons.notifications
+              : Icons.notifications_outlined,
+        ),
         if (hasUnread)
           const Positioned(
             right: -1,

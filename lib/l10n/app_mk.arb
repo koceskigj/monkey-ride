@@ -1,0 +1,50 @@
+{
+  "@@locale": "mk",
+  "bottomNavMap": "Мапа",
+  "bottomNavNotifications": "Известувања",
+  "bottomNavInfo": "Инфо",
+  "bottomNavStops": "Постојки",
+  "filters": "Филтри",
+  "lines": "Линии",
+  "lineLabel": "Линија {number}",
+  "@lineLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "direction": "Насока",
+  "westToEast": "Запад кон Исток",
+  "eastToWest": "Исток кон Запад",
+  "searchBusStopHint": "Внеси автобуска постојка",
+  "nearby": "Во близина",
+  "today": "Денес",
+  "yesterday": "Вчера",
+  "close": "Затвори",
+  "noBusesLeft": "Нема повеќе автобуси вечерва. Само Глеј!",
+  "enableLocation": "Вклучи локација",
+  "locationMessage": "Дај ми сигнал за да ги најдам најблиските постојки.",
+
+  "today": "Денес",
+  "yesterday": "Вчера",
+
+  "now": "Сега",
+  "minutesShort": "{minutes} мин.",
+  "@minutesShort": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+
+  "hoursShort": "{hours}ч. +",
+  "@hoursShort": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+
+  "errorNoInternet": "Изгледа интернетот не е стабилен.",
+  "errorServer": "Се обидувам да го најдам проблемот. Извини за непријатноста.",
+  "retry": "Пробај пак"
+}

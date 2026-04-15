@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 class NearbyBadge extends StatefulWidget {
   const NearbyBadge({super.key});
 
@@ -34,10 +36,12 @@ class _NearbyBadgeState extends State<NearbyBadge>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return FadeTransition(
       opacity: _opacityAnimation,
       child: Text(
-        'Nearby',
+        l10n.nearby,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: Colors.green.shade600,
           fontWeight: FontWeight.w600,

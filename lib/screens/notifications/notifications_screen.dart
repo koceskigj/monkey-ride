@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:monkey_ride/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
-import '../../app/localization/locale_provider.dart';
 import '../../core/utils/app_error_messages.dart';
 import '../../providers/notifications_provider.dart';
 import '../../widgets/common/app_error_state.dart';
@@ -11,16 +11,25 @@ import 'widgets/notification_row_card.dart';
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
+  String _resolveDateLabel(String raw, AppLocalizations l10n) {
+    switch (raw) {
+      case 'today':
+        return l10n.today;
+      case 'yesterday':
+        return l10n.yesterday;
+      default:
+        return raw;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<NotificationsProvider>();
-    final localeProvider = context.watch<LocaleProvider>();
-    final languageCode = localeProvider.locale.languageCode;
+    final l10n = AppLocalizations.of(context)!;
+    final languageCode = Localizations.localeOf(context).languageCode;
 
     if (provider.isLoading && provider.notifications.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (provider.errorMessage != null && !provider.hasData) {
@@ -39,8 +48,18 @@ class NotificationsScreen extends StatelessWidget {
         itemCount: provider.notifications.length,
         itemBuilder: (context, index) {
           final n = provider.notifications[index];
+
           final localizedTitle = n.titleFor(languageCode);
           final localizedMessage = n.messageFor(languageCode);
+
+          final rawDate =
+          provider.formatNotificationDate(n.publishedAt);
+
+          final resolvedDate =
+          _resolveDateLabel(rawDate, l10n);
+
+          final time =
+          provider.formatNotificationTime(n.publishedAt);
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -50,12 +69,8 @@ class NotificationsScreen extends StatelessWidget {
               isRead: provider.isRead(n.id),
               previewText:
               provider.getPreviewText(localizedMessage),
-              dateLabel: provider.formatNotificationDate(
-                n.publishedAt,
-              ),
-              timeLabel: provider.formatNotificationTime(
-                n.publishedAt,
-              ),
+              dateLabel: resolvedDate,
+              timeLabel: time,
               onTap: () async {
                 await provider.markAsRead(n.id);
 
@@ -65,12 +80,8 @@ class NotificationsScreen extends StatelessWidget {
                   context: context,
                   builder: (_) => NotificationDialog(
                     notification: n,
-                    dateLabel: provider.formatNotificationDate(
-                      n.publishedAt,
-                    ),
-                    timeLabel: provider.formatNotificationTime(
-                      n.publishedAt,
-                    ),
+                    dateLabel: resolvedDate,
+                    timeLabel: time,
                   ),
                 );
               },

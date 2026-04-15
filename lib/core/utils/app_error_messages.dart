@@ -25,15 +25,13 @@ class AppErrorMessages {
         text.contains('socketexception') ||
         text.contains('unavailable')) {
       return const AppErrorInfo(
-        message:
-        "Sorry to say this, but your internet is unstable.",
+        message: 'errorNoInternet',
         type: AppErrorType.noInternet,
       );
     }
 
     return const AppErrorInfo(
-      message:
-      "I'm trying to find the cable that's causing the problem. Sorry for the inconvenience.",
+      message: 'errorServer',
       type: AppErrorType.server,
     );
   }

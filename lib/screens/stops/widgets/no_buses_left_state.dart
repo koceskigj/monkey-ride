@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:monkey_ride/l10n/app_localizations.dart';
+
 
 class NoBusesLeftState extends StatelessWidget {
   const NoBusesLeftState({super.key});
@@ -9,6 +11,8 @@ class NoBusesLeftState extends StatelessWidget {
 
     final imageHeight =
     (size.height * 0.52).clamp(300.0, 500.0).toDouble();
+
+    final l10n = AppLocalizations.of(context)!;
 
     return Center(
       child: Padding(
@@ -21,11 +25,9 @@ class NoBusesLeftState extends StatelessWidget {
               height: imageHeight,
               fit: BoxFit.contain,
             ),
-
             const SizedBox(height: 18),
-
             Text(
-              'No more buses tonight. Just Gley!',
+              l10n.noBusesLeft,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium,
             ),

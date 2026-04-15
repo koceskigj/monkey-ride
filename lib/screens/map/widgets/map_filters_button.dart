@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../widgets/common/app_button.dart';
-
 
 class MapFiltersButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -13,9 +13,11 @@ class MapFiltersButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Center(
       child: AppButton(
-        label: 'Filters',
+        label: l10n.filters,
         icon: Icons.tune,
         onPressed: onPressed,
       ),

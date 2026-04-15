@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:monkey_ride/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/localization/locale_provider.dart';
@@ -47,10 +48,29 @@ class _StopArrivalsView extends StatelessWidget {
     required this.direction,
   });
 
+  String _resolveArrivalText(String raw, AppLocalizations l10n) {
+    if (raw == 'now') {
+      return l10n.now;
+    }
+
+    if (raw.startsWith('minutes:')) {
+      final minutes = int.tryParse(raw.split(':')[1]) ?? 0;
+      return l10n.minutesShort(minutes);
+    }
+
+    if (raw.startsWith('hours:')) {
+      final hours = int.tryParse(raw.split(':')[1]) ?? 0;
+      return l10n.hoursShort(hours);
+    }
+
+    return raw;
+  }
+
   @override
   Widget build(BuildContext context) {
     final localeProvider = context.watch<LocaleProvider>();
     final languageCode = localeProvider.locale.languageCode;
+    final l10n = AppLocalizations.of(context)!;
 
     final arrivalsProvider = context.watch<ArrivalsProvider>();
     final mapProvider = context.watch<MapProvider>();
@@ -111,11 +131,13 @@ class _StopArrivalsView extends StatelessWidget {
                   return const SizedBox.shrink();
                 }
 
+                final rawArrivalText = arrivalsProvider.formatArrivalText(
+                  arrival.minutesUntilArrival,
+                );
+
                 return ArrivalRowCard(
                   line: line,
-                  arrivalText: arrivalsProvider.formatArrivalText(
-                    arrival.minutesUntilArrival,
-                  ),
+                  arrivalText: _resolveArrivalText(rawArrivalText, l10n),
                   isSoon: arrivalsProvider.isArrivingSoon(
                     arrival.minutesUntilArrival,
                   ),

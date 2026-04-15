@@ -96,8 +96,8 @@ class NotificationsProvider extends ChangeNotifier {
     final target = DateTime(date.year, date.month, date.day);
     final difference = today.difference(target).inDays;
 
-    if (difference == 0) return 'Today';
-    if (difference == 1) return 'Yesterday';
+    if (difference == 0) return 'today';
+    if (difference == 1) return 'yesterday';
 
     final day = date.day.toString().padLeft(2, '0');
     final month = date.month.toString().padLeft(2, '0');

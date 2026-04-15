@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:monkey_ride/l10n/app_localizations.dart';
 
-import '../../../app/localization/locale_provider.dart';
 import '../../../models/app_notification_model.dart';
 
 class NotificationDialog extends StatelessWidget {
@@ -18,8 +17,8 @@ class NotificationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final localeProvider = context.watch<LocaleProvider>();
-    final languageCode = localeProvider.locale.languageCode;
+    final l10n = AppLocalizations.of(context)!;
+    final languageCode = Localizations.localeOf(context).languageCode;
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Dialog(
@@ -58,9 +57,7 @@ class NotificationDialog extends StatelessWidget {
               Center(
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: Text(
-                    languageCode == 'mk' ? 'Затвори' : 'Close',
-                  ),
+                  child: Text(l10n.close),
                 ),
               ),
             ],

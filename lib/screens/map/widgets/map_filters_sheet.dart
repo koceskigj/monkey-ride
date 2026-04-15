@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../providers/map_provider.dart';
 
 class MapFiltersSheet extends StatelessWidget {
@@ -14,6 +15,7 @@ class MapFiltersSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mapProvider = context.watch<MapProvider>();
+    final l10n = AppLocalizations.of(context)!;
 
     return SafeArea(
       child: Padding(
@@ -34,15 +36,17 @@ class MapFiltersSheet extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'Lines',
+              l10n.lines,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
             ...mapProvider.busLines.map(
                   (line) => CheckboxListTile(
                 value: mapProvider.selectedLineIds.contains(line.id),
-                onChanged: (_) => mapProvider.toggleLineSelection(line.id),
-                controlAffinity: ListTileControlAffinity.trailing,
+                onChanged: (_) =>
+                    mapProvider.toggleLineSelection(line.id),
+                controlAffinity:
+                ListTileControlAffinity.trailing,
                 title: Row(
                   children: [
                     Container(
@@ -54,14 +58,14 @@ class MapFiltersSheet extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Text(line.name),
+                    Text(l10n.lineLabel(line.number)),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 16),
             Text(
-              'Direction',
+              l10n.direction,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             RadioListTile<String>(
@@ -72,7 +76,7 @@ class MapFiltersSheet extends StatelessWidget {
                   mapProvider.selectDirection(value);
                 }
               },
-              title: const Text('West → East'),
+              title: Text(l10n.westToEast),
             ),
             RadioListTile<String>(
               value: 'east_to_west',
@@ -82,7 +86,7 @@ class MapFiltersSheet extends StatelessWidget {
                   mapProvider.selectDirection(value);
                 }
               },
-              title: const Text('East → West'),
+              title: Text(l10n.eastToWest),
             ),
           ],
         ),
